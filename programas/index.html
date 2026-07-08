@@ -6,10 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Maderas Habitarq</title>
     <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="style2.css" media="screen and (max-width: 768px)" />
+    <link rel="stylesheet" href="style2.css" />
     <link rel="icon" href="../otros/LogoEmpresa.png" />
     <!-- Cargamos el script con defer para que espere al HTML -->
     <script src="script.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -34,6 +35,20 @@
         <h1>Maderas Habitarq</h1>
         <h2>Todo en madera para tu hogar</h2>
     </div>
+    <!-- Contenedor flotante del video -->
+    <!-- Contenedor del video flotante adaptado al motor dinámico de Supabase -->
+    <div id="videoContainer" class="video-flotante" style="display: none;">
+        <div class="video-header">
+            <button id="btnCerrar" class="btn-accion">✕</button>
+        </div>
+        <!-- El origen (src) se inyectará de forma automática desde la base de datos de internet -->
+        <video id="miVideo" controls autoplay loop muted playsinline style="width: 100%; height: auto;">Video</video>
+    </div>
+
+    <!-- Barra lateral para volver a abrir -->
+    <div id="barraAbrir" class="barra-lateral-abrir" style="display: none;">
+        <button id="btnAbrir">▶ Ver Video</button>
+    </div>
 
     <!-- CUADRÍCULA DE PRODUCTOS -->
     <main class="galeria-productos">
@@ -46,31 +61,35 @@
                 <h4>Duelas</h4>
             </div>
             <div class="variante-oculta">
+                <!-- AGREGADOS LOS IDS EN CADA IMG PARA LOGRAR EL CAMBIO AUTOMÁTICO -->
                 <div class="item-variante">
-                    <img src="../otros/D2.png" alt="Duela panelada" /><span>Duela panelada</span>
+                    <img id="img-S1-P1" src="../otros/D2.png" alt="Duela panelada" /><span>Duela panelada</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/DC.png" alt="Duela de chonta" /><span>Duela de chonta</span>
+                    <img id="img-S1-P2" src="../otros/DC.png" alt="Duela de chonta" /><span>Duela de chonta</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/DB.png" alt="Duela Biselada" /><span>Duelas biseladas</span>
+                    <img id="img-S1-P3" src="../otros/DB.png" alt="Duela Biselada" /><span>Duelas biseladas</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/DP1.png" alt="Duela de pinos" /><span>Duela de pinos</span>
+                    <img id="img-S1-P4" src="../otros/DP1.png" alt="Duela de pinos" /><span>Duela de pinos</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/DP2.png" alt="Duela de eucalipto 2 X 1" /><span>Duela de eucalipto 2 X 1</span>
+                    <img id="img-S1-P5" src="../otros/DP2.png" alt="Duela de eucalipto 2 X 1" /><span>Duela de eucalipto
+                        2 X 1</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/DTC.png" alt="Duela para tendido de camas" /><span>Duelas para tendido de
-                        camas</span>
+                    <img id="img-S1-P6" src="../otros/DTC.png" alt="Duela para tendido de camas" /><span>Duelas para
+                        tendido de camas</span>
                 </div>
             </div>
         </div>
+
         <!-- Demás productos estándar -->
         <!-- Tarjeta de Rastreras CORREGIDA (Reemplaza la tuya por esta completa) -->
         <div class="tarjeta-producto" data-titulo="Rastreras"
-            data-descripcion="Zócalos y rastreras de madera perfectos para proteger tus paredes y dar un acabado limpio a tus pisos.">
+            data-descripcion="Zócalos y rastreras de madera perfectos para proteger tus paredes y dar un acabado limpio a tus pisos."
+            id="Seccion2">
             <div class="contenedor-img-tarjeta">
                 <img src="../otros/RASTRERAS.png" alt="rastreras" />
             </div>
@@ -78,39 +97,37 @@
                 <h4>Rastreras</h4>
             </div>
 
-            <!-- Todo lo que va aquí adentro se cargará en rejilla dentro del modal -->
             <div class="variante-oculta">
+                <!-- IDS ASIGNADOS PARA EL CAMBIO AUTOMÁTICO EN LA WEB DEL CLIENTE -->
                 <div class="item-variante">
-                    <img src="../otros/R1.png" alt="Rastrera de 6cm" />
+                    <img id="img-S2-P1" src="../otros/R1.png" alt="Rastrera de 6cm" />
                     <span>Rastrera de 6cm</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/R2.png" alt="Rastrera de 9cm" />
+                    <img id="img-S2-P2" src="../otros/R2.png" alt="Rastrera de 9cm" />
                     <span>Rastrera de 9cm</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/R3.png" alt="Rastrera de 6cm" />
+                    <img id="img-S2-P3" src="../otros/R3.png" alt="Rastrera de 6cm" />
                     <span>Rastrera de 6cm</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/R4.png" alt="Rastrera de 9cm" />
+                    <img id="img-S2-P4" src="../otros/R4.png" alt="Rastrera de 9cm" />
                     <span>Rastrera de 9cm</span>
                 </div>
-                <div class="item-variante" style="
-              grid-column: 1 / -1;
-              background: #eef2f3;
-              padding: 15px;
-              margin-top: 10px;
-            ">
+                <div class="item-variante"
+                    style="grid-column: 1 / -1; background: #eef2f3; padding: 15px; margin-top: 10px;">
                     <span style="font-size: 14px; color: #3e2723">📐 <strong>Medidas personalizadas</strong> según tus
                         necesidades</span>
                 </div>
             </div>
         </div>
 
+
         <!-- Tarjeta de Cornisas CORREGIDA -->
         <div class="tarjeta-producto" data-titulo="Cornisas"
-            data-descripcion="Molduras superiores decorativas que aportan elegancia y un estilo único a las uniones entre paredes y techos.">
+            data-descripcion="Molduras superiores decorativas que aportan elegancia y un estilo único a las uniones entre paredes y techos."
+            id="Seccion3">
             <div class="contenedor-img-tarjeta">
                 <img src="../otros/cornizas.png" alt="cornizas" />
             </div>
@@ -118,30 +135,32 @@
                 <h4>Cornisas</h4>
             </div>
 
-            <!-- Sub-galería oculta para la ventana flotante -->
+            <!-- Sub-galería oculta con IDs de renderizado para los usuarios -->
             <div class="variante-oculta">
                 <div class="item-variante">
-                    <img src="../otros/CR1.png" alt="Cornisas 1" />
+                    <img id="img-S3-P1" src="../otros/CR1.png" alt="Cornisas 1" />
                     <span>Cornisa Modelo 1</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/CR2.png" alt="Cornisas 2" />
+                    <img id="img-S3-P2" src="../otros/CR2.png" alt="Cornisas 2" />
                     <span>Cornisa Modelo 2</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/CR4.png" alt="Cornisas 3" />
+                    <img id="img-S3-P3" src="../otros/CR4.png" alt="Cornisas 3" />
                     <span>Cornisa Modelo 3</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/CR3.png" alt="Cornisas 4" />
+                    <img id="img-S3-P4" src="../otros/CR3.png" alt="Cornisas 4" />
                     <span>Cornisa Modelo 4</span>
                 </div>
             </div>
         </div>
 
+
         <!-- Tarjeta de Locado CORREGIDA -->
         <div class="tarjeta-producto" data-titulo="Locado de madera"
-            data-descripcion="Servicio especializado de lacado y protección para resaltar las vetas naturales y garantizar durabilidad.">
+            data-descripcion="Servicio especializado de lacado y protección para resaltar las vetas naturales y garantizar durabilidad."
+            id="Seccion4">
             <div class="contenedor-img-tarjeta">
                 <img src="../otros/Locado.png" alt="Locado" />
             </div>
@@ -149,31 +168,32 @@
                 <h4>Locado de madera</h4>
             </div>
 
-            <!-- Sub-galería oculta para la ventana flotante -->
+            <!-- Sub-galería oculta con IDs de renderizado para los usuarios -->
             <div class="variante-oculta">
                 <div class="item-variante">
-                    <img src="../otros/L1.png" alt="Locado 1" />
+                    <img id="img-S4-P1" src="../otros/L1.png" alt="Locado 1" />
                     <span>Acabado Mate</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/L2.png" alt="Locado 2" />
+                    <img id="img-S4-P2" src="../otros/L2.png" alt="Locado 2" />
                     <span>Acabado Semibrillante</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/L3.png" alt="Locado 3" />
+                    <img id="img-S4-P3" src="../otros/L3.png" alt="Locado 3" />
                     <span>Acabado Brillante</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/L4.png" alt="Locado 4" />
+                    <img id="img-S4-P4" src="../otros/L4.png" alt="Locado 4" />
                     <span>Protección Alta Gama</span>
                 </div>
             </div>
         </div>
 
+
         <!-- Tarjeta de Mangón CORREGIDA -->
         <div class="tarjeta-producto" data-titulo="Mangón para pasamanos"
             data-descripcion="Pasamanos y mangones robustos de madera fina, diseñados para escaleras seguras y estéticas."
-            id="Seccion2">
+            id="Seccion5">
             <div class="contenedor-img-tarjeta">
                 <img src="../otros/mangon.png" alt="mangon" />
             </div>
@@ -181,44 +201,38 @@
                 <h4>Mangón para pasamanos</h4>
             </div>
 
-            <!-- Sub-galería oculta con una sola variante igual a las anteriores -->
+            <!-- Sub-galería oculta con IDs de renderizado para los usuarios -->
             <div class="variante-oculta">
                 <div class="item-variante">
-                    <img src="../otros/mangon.png" alt="mangon" />
-                    <samp>Mangon 1</samp>
+                    <img id="img-S5-P1" src="../otros/mangon.png" alt="mangon" />
+                    <span>Mangon 1</span>
                 </div>
                 <div class="item-variante">
-                    <img src="../otros/M1.png" alt="Mangon" />
-                    <samp>Mangon 2</samp>
+                    <img id="img-S5-P2" src="../otros/M1.png" alt="Mangon" />
+                    <span>Mangon 2</span>
                 </div>
-                <div class="item-variante" style="
-              grid-column: 1 / -1;
-              background: #eef2f3;
-              padding: 15px;
-              margin-top: 10px;
-            ">
+                <div class="item-variante"
+                    style="grid-column: 1 / -1; background: #eef2f3; padding: 15px; margin-top: 10px;">
                     <span style="font-size: 14px; color: #3e2723">📐Medida de 8cm de ancho desde los 8.00$
                         <strong>Precio varia según la madera</strong></span>
                 </div>
             </div>
         </div>
 
+        <!-- Tarjeta de Bolillos CORREGIDA -->
         <div class="tarjeta-producto" data-titulo="Bolillos"
-            data-descripcion="Columnas redondas y bolillos torneados con precisión milimétrica para estructuras o decoración.">
+            data-descripcion="Columnas redondas y bolillos torneados con precisión milimétrica para estructuras o decoración."
+            id="Seccion6">
             <img src="../otros/bolillos.png" alt="bolillos" />
             <div class="info-tarjeta">
                 <h4>Bolillos</h4>
             </div>
             <div class="variante-oculta">
                 <div class="item-variante">
-                    <img src="../otros/bolillos.png" alt="Bolillos">
+                    <img id="img-S6-P1" src="../otros/bolillos.png" alt="Bolillos">
                 </div>
-                <div class="item-variante" style="
-              grid-column: 1 / -1;
-              background: #eef2f3;
-              padding: 15px;
-              margin-top: 10px;
-            ">
+                <div class="item-variante"
+                    style="grid-column: 1 / -1; background: #eef2f3; padding: 15px; margin-top: 10px;">
                     <span style="font-size: 14px; color: #3e2723">Ideal para cortineros , closets
                         <br>
                         📐Medidas : 3CM de diametro
@@ -227,22 +241,21 @@
                 </div>
             </div>
         </div>
+
+        <!-- Tarjeta de Tarugos CORREGIDA -->
         <div class="tarjeta-producto" data-titulo="Tarugos"
-            data-descripcion="Tarugos de madera maciza indispensables para ensambles invisibles, fuertes y de calidad artesanal.">
+            data-descripcion="Tarugos de madera maciza indispensables para ensambles invisibles, fuertes y de calidad artesanal."
+            id="Seccion7">
             <img src="../otros/tarugo.png" alt="tarugo" />
             <div class="info-tarjeta">
                 <h4>Tarugo</h4>
             </div>
             <div class="variante-oculta">
                 <div class="item-variante">
-                    <img src="../otros/tarugo.png" alt="Tarugo">
+                    <img id="img-S7-P1" src="../otros/tarugo.png" alt="Tarugo">
                 </div>
-                <div class="item-variante" style="
-              grid-column: 1 / -1;
-              background: #eef2f3;
-              padding: 15px;
-              margin-top: 10px;
-            ">
+                <div class="item-variante"
+                    style="grid-column: 1 / -1; background: #eef2f3; padding: 15px; margin-top: 10px;">
                     <span style="font-size: 14px; color: #3e2723">Elemento esencial para unir piezas de madera o fijar
                         objetos de forma segura sobre superficies sólidas.
                         <br>
@@ -253,22 +266,21 @@
             </div>
         </div>
 
+
+        <!-- Tarjeta de Viga Avino CORREGIDA -->
         <div class="tarjeta-producto" data-titulo="Viga Avino"
-            data-descripcion="Vigas estructurales de gran soporte y resistencia, ideales para techos altos y proyectos rústicos o modernos.">
+            data-descripcion="Vigas estructurales de gran soporte y resistencia, ideales para techos altos y proyectos rústicos o modernos."
+            id="Seccion8">
             <img src="../otros/Viga.png" alt="Viga Avino" />
             <div class="info-tarjeta">
                 <h4>Vigas avino</h4>
             </div>
             <div class="variante-oculta">
                 <div class="item-variante">
-                    <img src="../otros/Viga.png" alt="Vigas avino">
+                    <img id="img-S8-P1" src="../otros/Viga.png" alt="Vigas avino">
                 </div>
-                <div class="item-variante" style="
-              grid-column: 1 / -1;
-              background: #eef2f3;
-              padding: 15px;
-              margin-top: 10px;
-            ">
+                <div class="item-variante"
+                    style="grid-column: 1 / -1; background: #eef2f3; padding: 15px; margin-top: 10px;">
                     <span style="font-size: 14px; color: #3e2723">Madera de excelente resistencia y durabilidad, ideal
                         para estructuras y trabajos de madera vista gracias a su atractivo color natural. Puede
                         mantenerse únicamente con aceites, sin necesidad de lacado.
@@ -277,127 +289,125 @@
                 </div>
             </div>
         </div>
+
         <div class="tarjeta-producto" data-titulo="Madera de Laurel"
             data-descripcion="Madera semidura muy vistosa y fácil de trabajar, excelente para muebles y carpintería residencial."
-            id="Seccion3">
+            id="Seccion9">
             <img src="../otros/laurel.png" alt="Laurel" />
             <div class="info-tarjeta">
                 <h4>Laurel</h4>
             </div>
             <div class="variante-oculta">
                 <div class="item-variante">
-                    <img src="../otros/laurel.png" alt="Laurel">
+                    <img id="img-S9-P1" src="../otros/laurel.png" alt="Laurel">
                 </div>
-                <div class="item-variante" style="
-              grid-column: 1 / -1;
-              background: #eef2f3;
-              padding: 15px;
-              margin-top: 10px;
-            ">
+                <div class="item-variante"
+                    style="grid-column: 1 / -1; background: #eef2f3; padding: 15px; margin-top: 10px;">
                     <span style="font-size: 14px; color: #3e2723">Madera liviana, versátil y fácil de trabajar,
                         caracterizada por su tono claro con veteado (jaspe) en marrón oscuro.
                         <br>
-                        📐Medidas : TABLON : GROSOR 4CM X 290CM DE
-                        LARGO X 20CM ANCHO
-                        TABLA : GROSOR 1.8CM X 290CM DE
-                        LARGO X 20CM ANCHO
-                        <br>
-                        <strong></strong></span>
+                        📐Medidas : TABLON : GROSOR 4CM X 290CM DE LARGO X 20CM ANCHO
+                        TABLA : GROSOR 1.8CM X 290CM DE LARGO X 20CM ANCHO
+                    </span>
                 </div>
             </div>
         </div>
+
         <div class="tarjeta-producto" data-titulo="Madera de Pino"
-            data-descripcion="Madera versátil, económica y tratada para resistir plagas. Ideal para la construcción en general.">
+            data-descripcion="Madera versátil, económica y tratada para resistir plagas. Ideal para la construcción en general."
+            id="Seccion10">
             <img src="../otros/Pino.png" alt="Pino" />
             <div class="info-tarjeta">
                 <h4>Pino</h4>
             </div>
             <div class="variante-oculta">
                 <div class="item-variante">
-                    <img src="../otros/Pino.png" alt="Pino">
+                    <img id="img-S10-P1" src="../otros/Pino.png" alt="Pino">
                 </div>
-                <div class="item-variante" style="
-              grid-column: 1 / -1;
-              background: #eef2f3;
-              padding: 15px;
-              margin-top: 10px;
-            ">
+                <div class="item-variante"
+                    style="grid-column: 1 / -1; background: #eef2f3; padding: 15px; margin-top: 10px;">
                     <span style="font-size: 14px; color: #3e2723">El pino es una madera resistente y de dureza media,
                         ideal para interiores. Se distingue por su tono claro y la presencia de nudos naturales, los
                         cuales aportan un atractivo acabado rústico a los muebles.
                         <br>
-                        📐Medidas : TABLON: GROSOR 4CM X 290CM LARGO X
-                        20CM ANCHO
-                        TABLA: GROSOR 1.8CM X 290 CM LARGO X
-                        20CM ANCHO
-                        <strong></strong></span>
+                        📐Medidas : TABLON: GROSOR 4CM X 290CM LARGO X 20CM ANCHO
+                        TABLA: GROSOR 1.8CM X 290 CM LARGO X 20CM ANCHO
+                    </span>
                 </div>
             </div>
         </div>
+
         <div class="tarjeta-producto" data-titulo="Madera de Seique"
-            data-descripcion="Una de las maderas más cotizadas por su gran dureza, estabilidad y resistencia a la humedad de la zona.">
+            data-descripcion="Una de las maderas más cotizadas por su gran dureza, estabilidad y resistencia a la humedad de la zona."
+            id="Seccion11">
             <img src="../otros/Seique.png" alt="Seique" />
             <div class="info-tarjeta">
                 <h4>Seiquel</h4>
             </div>
             <div class="variante-oculta">
                 <div class="item-variante">
-                    <img src="../otros/Seique.png" alt="Seiquel">
+                    <img id="img-S11-P1" src="../otros/Seique.png" alt="Seiquel">
                 </div>
-                <div class="item-variante" style="
-              grid-column: 1 / -1;
-              background: #eef2f3;
-              padding: 15px;
-              margin-top: 10px;
-            ">
+                <div class="item-variante"
+                    style="grid-column: 1 / -1; background: #eef2f3; padding: 15px; margin-top: 10px;">
                     <span style="font-size: 14px; color: #3e2723">El seiquel es una madera versátil y fácil de trabajar
                         que ofrece buenos resultados. Se caracteriza por ser fácil de aserrar, no presentar resistencia
                         al clavado y ser resistente a las polillas, siendo una opción excelente para trabajos en
                         exteriores.
                         <br>
-                        📐Medidas :TABLON: GROSOR 4CM X 290CM LARGO X
-                        20CM ANCHO
-                        TABLA: GROSOR 1.8CM X 290 CM LARGO X
-                        20CM ANCHO
-                        <strong></strong></span>
+                        📐Medidas :TABLON: GROSOR 4CM X 290CM LARGO X 20CM ANCHO
+                        TABLA: GROSOR 1.8CM X 290 CM LARGO X 20CM ANCHO
+                    </span>
                 </div>
             </div>
         </div>
+
         <div class="tarjeta-producto" data-titulo="Madera de Canelo"
-            data-descripcion="Madera fina de excelentes acabados estéticos, perfecta para detalles decorativos y acabados de lujo.">
+            data-descripcion="Madera fina de excelentes acabados estéticos, perfecta para detalles decorativos y acabados de lujo."
+            id="Seccion12">
             <img src="../otros/Canelo.png" alt="Canelo" />
             <div class="info-tarjeta">
                 <h4>Canelo</h4>
             </div>
             <div class="variante-oculta">
                 <div class="item-variante">
-                    <img src="../otros/Canelo.png" alt="Canelo">
+                    <img id="img-S12-P1" src="../otros/Canelo.png" alt="Canelo">
                 </div>
-                <div class="item-variante" style="
-              grid-column: 1 / -1;
-              background: #eef2f3;
-              padding: 15px;
-              margin-top: 10px;
-            ">
+                <div class="item-variante"
+                    style="grid-column: 1 / -1; background: #eef2f3; padding: 15px; margin-top: 10px;">
                     <span style="font-size: 14px; color: #3e2723">Madera de peso y dureza intermedios, estéticamente
-                        atractiva; ideal para muebles y molduras, pero requiere protección en exteriores.
-                        📐Medidas :TABLON: GROSOR 4CM X 290CM LARGO X
-                        20CM ANCHO
-                        TABLA: GROSOR 1.8CM X 290 CM LARGO X
-                        20CM ANCHO
-                        <strong></strong></span>
+                        atractiva; ideal para muebles and molduras, pero requiere protección en exteriores.
+                        <br>
+                        📐Medidas :TABLON: GROSOR 4CM X 290CM LARGO X 20CM ANCHO
+                        TABLA: GROSOR 1.8CM X 290 CM LARGO X 20CM ANCHO
+                    </span>
                 </div>
             </div>
         </div>
-        <div class="Catalogo" id="Catalogo">
-            <a href="../Documentos/Catalogo.pdf" target="_blank">Ver catalogo</a>
-        </div>
-    </main>
+                <!-- =========================================================================
+             SECCIÓN RECEPTORA: ENTRADA AUTOMÁTICA DE PRODUCTOS MODULARES ILIMITADOS
+             ========================================================================= -->
+        <section class="seccion-catalogo-dinamico" style="max-width: 1200px; margin: 40px auto; padding: 0 20px; box-sizing: border-box;">
+            <!-- Contenedor elástico maestro donde JavaScript inyectará tus maderas -->
+            <div id="contenedorModularesPublico" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px;">
+                <!-- Las tarjetas creadas desde el administrador aparecerán aquí solas -->
+            </div>
+        </section>
 
+        <!-- EL BOTÓN DEL CATÁLOGO (Corregido con sus etiquetas de cierre correspondientes) -->
+        <div class="Catalogo" id="Catalogo">
+            <a id="btn-catalogo" href="#" target="_blank">Ver catalogo</a>
+        </div>
+
+    </main> <!-- Cierre correcto del contenedor principal de la web -->
+
+    <!-- SECCIÓN DE UBICACIÓN COMPLETA E INTACTA (Sin tocar una sola letra) -->
     <div class="contenedor-ubicacion">
         <div class="tarjeta-ubicacion">
             <div class="mapa-wrapper">
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.227016793368!2d-79.0261907!3d-2.9153461999999997!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91cd22848d7a35bb%3A0xaac56968358dc664!2sMaderas%20Habitarq!5e1!3m2!1ses-419!2sec!4v1782314891321!5m2!1ses-419!2sec" allowfullscreen="" loading="lazy"></iframe>
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.227016793368!2d-79.0261907!3d-2.9153461999999997!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91cd22848d7a35bb%3A0xaac56968358dc664!2sMaderas%20Habitarq!5e1!3m2!1ses-419!2sec!4v1782314891321!5m2!1ses-419!2sec"
+                    allowfullscreen="" loading="lazy"></iframe>
             </div>
             <div class="info-ubicacion">
                 <h3>Visítanos</h3>
@@ -406,7 +416,7 @@
         </div>
     </div>
 
-    <!-- VENTANA INTERACTIVA MODAL -->
+    <!-- VENTANA INTERACTIVA MODAL COMPLETA E INTACTA -->
     <div id="modal-ventana" class="modal-oculto">
         <div class="modal-caja">
             <span id="modal-cerrar-btn">&times;</span>
@@ -416,7 +426,7 @@
         </div>
     </div>
 
-    <!-- PIE DE PÁGINA -->
+    <!-- PIE DE PÁGINA ORIGINAL E INTACTO (Perfectamente alineado abajo y a lo ancho de la pantalla) -->
     <footer>
         <div class="bloque-pie">
             <img src="../otros/LogoEmpresa.png" alt="Logo empresa" class="pie" />
@@ -424,15 +434,17 @@
         </div>
         <div class="bloque-pie">
             <h3>Horarios de Atención</h3>
-            <h4>Lun - Vie: 8:00 a.m. a 6:00 p.m.</h4>
+            <h4>Lun - Jue: 8:00 a.m. a 6:00 p.m.</h4>
+            <h4>Vie: 8:00 a.m. a 5:30 p.m.</h4>
             <h4>Sábados: 8:00 a.m. a 1:00 p.m.</h4>
         </div>
         <div class="bloque-pie">
             <h3>Ubicación</h3>
             <h4>Cuenca, Ecuador</h4>
-            <h4>Materializando la casa de tus sueños.</h4>
+            <h4>Av. Don Bosco 7-68</h4>
         </div>
     </footer>
+
 </body>
 
 </html>

@@ -511,3 +511,128 @@ footer h4 {
 .Catalogo {
     text-align: center;
 }
+
+/* --- Estilos del Video Flotante (Tamaño Comercial) --- */
+.video-flotante {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    width: 180px; /* Tamaño mucho más pequeño y discreto */
+    background-color: #000;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 9999;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.video-flotante video {
+    width: 100%;
+    display: block;
+}
+
+/* Capa superior absoluta para que la 'X' flote sobre el video sin consumir espacio */
+.video-header {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    z-index: 10000;
+}
+
+.btn-accion {
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 3px 6px;
+    border-radius: 4px;
+    line-height: 1;
+}
+
+.btn-accion:hover {
+    background: #ff4d4d;
+    color: white;
+}
+
+/* --- Estilos de la Barra Lateral --- */
+.barra-lateral-abrir {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #222;
+    padding: 8px 4px;
+    border-radius: 4px 0 0 4px;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.2);
+    z-index: 9999;
+}
+
+#btnAbrir {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 12px;
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+}
+
+#btnAbrir:hover {
+    background: #0056b3;
+}
+
+/* --- CORRECCIÓN DEFINITIVA DEL PIE DE PÁGINA --- */
+.pie-pagina {
+    clear: both; /* Rompe cualquier flotado de las tarjetas de arriba */
+    width: 100%; /* Obliga a ocupar todo el ancho de la pantalla */
+    background-color: #4a2c11; /* Color chocolate corporativo de tu logo */
+    color: #ffffff; /* Texto blanco para legibilidad */
+    padding: 40px 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap; /* Permite adaptarse si se abre en un celular */
+    justify-content: space-around; /* Distribuye los 3 bloques equitativamente */
+    gap: 30px;
+    margin-top: 50px;
+}
+
+/* Estilo para cada uno de los 3 bloques internos */
+.pie-pagina .bloque-pie {
+    flex: 1;
+    min-width: 250px; /* Evita que se compriman demasiado */
+    max-width: 350px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Tipografías internas del footer */
+.pie-pagina h3 {
+    margin: 0 0 15px 0;
+    font-size: 18px;
+    color: #f4f4f9;
+    font-weight: bold;
+    border-bottom: 2px solid #1cbd5d; /* Sutil línea verde decorativa */
+    padding-bottom: 5px;
+    width: fit-content;
+}
+
+.pie-pagina h4 {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #cbd5e1;
+    font-weight: normal;
+}
+
+/* Tamaño controlado del logo de la empresa */
+.pie-pagina img.pie {
+    max-height: 60px;
+    width: auto;
+    margin-bottom: 15px;
+}
+
