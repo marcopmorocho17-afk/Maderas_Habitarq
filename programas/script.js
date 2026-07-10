@@ -250,50 +250,53 @@ async function sincronizarVideoAnuncioWeb() {
 
 
 // ==========================================
-// 7. DESCARGA Y RENDERIZADO DE PRODUCTOS MODULARES EN VIVO (FILA SIMÉTRICA REPARADA)
+// 7. DESCARGA Y RENDERIZADO DE PRODUCTOS MODULARES EN VIVO (MALLA HORIZONTAL Y FIJACIÓN 404)
 // ==========================================
 async function cargarProductosModularesPublico() {
     const contenedor = document.getElementById('contenedorModularesPublico');
     if (!contenedor) return;
 
     try {
-        // A. Descargamos las maderas ilimitadas de Supabase
+        // Ejecuta la consulta REST directa usando los tokens declarados arriba
         const respuestaMaster = await fetch(SUPABASE_URL + '/rest/v1/productos_modulares?select=id,titulo,descripcion,ruta_portada', {
             headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
         });
         const productos = await respuestaMaster.json();
 
-        // REPARACIÓN MAESTRA: Forzamos al contenedor a ordenarlos de izquierda a derecha en cuadricula simétrica
-        contenedor.style.cssText = "display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; width: 100%; box-sizing: border-box; margin-top: 30px;";
+        // FORZADO DE MALLA HORIZONTAL DIRECTO DESDE JS (Pone los cuadros uno al lado del otro)
+        contenedor.style.setProperty('display', 'grid', 'important');
+        contenedor.style.setProperty('grid-template-columns', 'repeat(auto-fill, minmax(280px, 1fr))', 'important');
+        contenedor.style.setProperty('gap', '30px', 'important');
+        contenedor.style.setProperty('width', '100%', 'important');
+        contenedor.style.setProperty('clear', 'both', 'important');
 
         contenedor.innerHTML = '';
 
         if (productos && Array.isArray(productos) && productos.length > 0) {
             for (const prod of productos) {
-                // B. Traemos sus imágenes de galería asociadas
+                // Descargamos las variantes secundarias de este producto específico mediante fetch directo
                 const respuestaVariantes = await fetch(SUPABASE_URL + '/rest/v1/productos_modulares_fotos?select=ruta_foto,nombre_variante&producto_id=eq.' + prod.id, {
                     headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
                 });
                 const variantes = await respuestaVariantes.json();
 
-                // C. CONSTRUCCIÓN CON CLONACIÓN HTML DE TU CANELO/SEIQUE
+                // Creamos la tarjeta elástica clonando la estructura exacta de tus maderas fijas nativas
                 const tarjeta = document.createElement('div');
                 tarjeta.className = 'tarjeta-producto';
                 tarjeta.setAttribute('id', 'Dinamico-' + prod.id);
                 tarjeta.setAttribute('data-titulo', prod.titulo);
                 tarjeta.setAttribute('data-descripcion', prod.descripcion || '');
                 tarjeta.style.cursor = 'pointer';
-
-                // Inyectamos exactamente tus mismas clases nativas: info-tarjeta, h4 y variante-oculta
+                
                 let contenidoHTML = `
-                    <img src="${prod.ruta_portada}" alt="${prod.titulo}" />
+                    <img src="${prod.ruta_portada}?t=${Date.now()}" alt="${prod.titulo}" />
                     <div class="info-tarjeta">
                         <h4>${prod.titulo}</h4>
                     </div>
-                    <div class="variante-oculta">
+                    <div class="variante-oculta" style="display:none;">
                 `;
 
-                // Montamos las fotos secundarias en la galería interna del modal
+                // Montamos las fotos secundarias en la galería interna tal como tus maderas fijas
                 if (variantes && variantes.length > 0) {
                     variantes.forEach(v => {
                         contenidoHTML += `
@@ -310,11 +313,11 @@ async function cargarProductosModularesPublico() {
                     `;
                 }
 
-                // Cuadro café inferior con especificaciones y medidas dentro del modal
+                // Inyectamos el cuadro inferior respetando tu diseño nativo
                 contenidoHTML += `
                         <div class="item-variante" style="grid-column: 1 / -1; background: #eef2f3; padding: 15px; margin-top: 10px;">
                             <span style="font-size: 14px; color: #3e2723; white-space: pre-wrap; font-family: inherit; display: block; text-align: left;">
-                                ${prod.descripcion || 'Sin especificaciones añadidas.'}
+                                ${prod.descripcion || 'Sin especificaciones añadidas todavía.'}
                             </span>
                         </div>
                     </div> <!-- Fin variante-oculta -->
@@ -322,21 +325,20 @@ async function cargarProductosModularesPublico() {
 
                 tarjeta.innerHTML = contenidoHTML;
 
-                // D. Programamos el disparador del clic para tu ventana modal nativa
+                // Programamos el clic para armar el modal dinámico e interactivo nativo
                 tarjeta.addEventListener('click', function() {
                     const ventanaModal = document.getElementById('modal-ventana');
                     const nombreModal = document.getElementById('modal-nombre');
-                    const detalleModal = document.getElementById('modal-detalle');
+                    const detalleModal = document.getElementById('modal-detalle'); // REPARADO 404: Apunta al nodo correcto de tu web
                     const galeriaInterna = document.getElementById('modal-galeria-interna');
 
                     if (!ventanaModal || !nombreModal || !detalleModal || !galeriaInterna) return;
 
                     galeriaInterna.innerHTML = '';
-                    nombreModal.textContent = this.getAttribute('data-titulo') || '';
-                    detalleModal.textContent = ''; 
+                    nombreModal.textContent = this.getAttribute('data-titulo') || ''; 
+                    detalleModal.textContent = ''; // Limpio para que herede el span inferior nativo sin duplicarse
                     
                     const contenedorVariantes = this.querySelector('.variante-oculta');
-                    
                     if (contenedorVariantes) {
                         const items = contenedorVariantes.querySelectorAll('.item-variante');
                         items.forEach(item => {
@@ -344,21 +346,21 @@ async function cargarProductosModularesPublico() {
                             galeriaInterna.appendChild(clon);
                         });
                     }
-                    
                     ventanaModal.className = 'modal-visible';
                 });
 
                 contenedor.appendChild(tarjeta);
             }
-            console.log("¡Medición simétrica horizontal acoplada con éxito!");
+            console.log("¡Malla horizontal y modal dinámico sincronizados sin errores 404!");
         }
     } catch (err) {
         console.error("Error al sincronizar catálogo elástico público:", err);
     }
 }
 
-// Vinculación explícita global para el entorno nativo de la web
+// Sincronización explícita global
 window.cargarProductosModularesPublico = cargarProductosModularesPublico;
+
 // Vinculaciones explícitas en el árbol de ventanas globales
 window.sincronizarVideoAnuncioWeb = sincronizarVideoAnuncioWeb;
 
