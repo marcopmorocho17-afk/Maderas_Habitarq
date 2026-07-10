@@ -160,50 +160,62 @@ async function actualizarEnlaceDelCatalogo() {
     console.error("Hubo un problema inesperado con el PDF:", err);
   }
 }
-
-
-// ==========================================
-// 5. DESCARGA Y RENDERIZADO DE FOTOS DE LA WEB (CATÁLOGO FIJO - FETCH REST BLINDADO)
-// ==========================================
+// =========================================================================
+// SIFE-MOTOR: DESCARGA RECEPTORA DE IMÁGENES Y NOMBRES PLANOS DE LA DB
+// =========================================================================
 async function descargarYActualizarFotosEnWeb() {
     try {
-        // CORRECCIÓN DIRECTA: Consultamos a Supabase mediante fetch REST para saltar bloqueos sintácticos
-        const respuestaFetch = await fetch(SUPABASE_URL + '/rest/v1/catalogo_imagenes?select=seccion_id,orden,ruta_imagen', {
-            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+        // Hacemos la consulta REST inyectando la nueva columna de nombres planos
+        const urlFetch = SUPABASE_URL + '/rest/v1/catalogo_imagenes?select=id,seccion_id,orden,ruta_imagen,nombre_sub_variante';
+        
+        const respuesta = await fetch(urlFetch, {
+            headers: { 
+                'apikey': SUPABASE_ANON_KEY, 
+                'Authorization': 'Bearer ' + SUPABASE_ANON_KEY 
+            }
         });
-        const registros = await respuestaFetch.json();
+        const datos = await respuesta.json();
 
-        if (registros && Array.isArray(registros)) {
-            imagenesCargadasDeDB = registros;
+        if (datos && Array.isArray(datos)) {
+            // Sincronizamos la variable global para que la Función 2 lea los textos
+            imagenesCargadasDeDB = datos;
 
-            registros.forEach(item => {
-                let bloquePrefijo = "S1"; 
-                if (item.seccion_id === "Seccion2") bloquePrefijo = "S2";
-                if (item.seccion_id === "Seccion3") bloquePrefijo = "S3";
-                if (item.seccion_id === "Seccion4") bloquePrefijo = "S4";
-                if (item.seccion_id === "Seccion5") bloquePrefijo = "S5";
-                if (item.seccion_id === "Seccion6") bloquePrefijo = "S6";
-                if (item.seccion_id === "Seccion7") bloquePrefijo = "S7";
-                if (item.seccion_id === "Seccion8") bloquePrefijo = "S8";
-                if (item.seccion_id === "Seccion9") bloquePrefijo = "S9";
-                if (item.seccion_id === "Seccion10") bloquePrefijo = "S10";
-                if (item.seccion_id === "Seccion11") bloquePrefijo = "S11";
-                if (item.seccion_id === "Seccion12") bloquePrefijo = "S12";
+            // Renderizado simétrico inicial para tus 12 maderas fijas
+            datos.forEach(function(item) {
+                if (!isNaN(item.orden)) {
+                    let bloquePrefijo = "S1";
+                    if (item.seccion_id === "Seccion2") bloquePrefijo = "S2";
+                    if (item.seccion_id === "Seccion3") bloquePrefijo = "S3";
+                    if (item.seccion_id === "Seccion4") bloquePrefijo = "S4";
+                    if (item.seccion_id === "Seccion5") bloquePrefijo = "S5";
+                    if (item.seccion_id === "Seccion6") bloquePrefijo = "S6";
+                    if (item.seccion_id === "Seccion7") bloquePrefijo = "S7";
+                    if (item.seccion_id === "Seccion8") bloquePrefijo = "S8";
+                    if (item.seccion_id === "Seccion9") bloquePrefijo = "S9";
+                    if (item.seccion_id === "Seccion10") bloquePrefijo = "S10";
+                    if (item.seccion_id === "Seccion11") bloquePrefijo = "S11";
+                    if (item.seccion_id === "Seccion12") bloquePrefijo = "S12";
 
-                const elementoImg = document.getElementById("img-" + bloquePrefijo + "-P" + item.orden);
-                if (elementoImg) {
-                    // PARÁMETRO DE FRESCURA: Sumamos la marca de tiempo (?t=) para obligar a Edge a triturar la caché vieja
-                    elementoImg.src = item.ruta_imagen + "?t=" + Date.now();
+                    const elementoImg = document.getElementById("img-" + bloquePrefijo + "-P" + item.orden);
+                    if (elementoImg) {
+                        elementoImg.src = item.ruta_imagen + "?t=" + Date.now();
+                        
+                        // Si cambias el nombre de una foto fija, actualiza su span nativo automáticamente
+                        const elementoTexto = elementoImg.nextElementSibling;
+                        if (elementoTexto && elementoTexto.tagName === "SPAN" && item.nombre_sub_variante) {
+                            elementoTexto.textContent = item.nombre_sub_variante;
+                        }
+                    }
                 }
             });
-            console.log("¡Las maderas fijas tradicionales se actualizaron en la web pública con éxito!");
+            console.log("¡Lote global de imágenes y nombres planos sincronizados con éxito!");
         }
     } catch (err) {
-        console.error("Error cargando fotos en el catálogo público:", err);
+        console.error("Error en la descarga de metadatos públicos:", err);
     }
 }
-
-
+// Registro obligatorio en el contexto global window
+window.descargarYActualizarFotosEnWeb = descargarYActualizarFotosEnWeb;
 // ==========================================
 // 6. DESCARGA Y SINCRONIZACIÓN DEL VIDEO EN VIVO (CORREGIDO ÍNDICE INDIVIDUAL)
 // ==========================================
