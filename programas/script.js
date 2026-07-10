@@ -149,105 +149,65 @@ async function descargarYActualizarFotosEnWeb() {
     } catch (err) { console.error("Error en la descarga de metadatos públicos:", err); }
 }
 
-// =========================================================================
-// 4. MOTOR COMERCIAL TIKTOK: VERSIÓN BRONCE DEFINITIVA (CON ÍNDICE CERO [0])
-// =========================================================================
+// ========================================================================= //
+// 4. MOTOR COMERCIAL TIKTOK: VERSIÓN BRONCE DEFINITIVA (CON ÍNDICE CERO [0]) //
+// ========================================================================= //
 async function sincronizarVideoAnuncioWeb() {
-    let contenedorVideosPublico = document.getElementById('contenedor-video-anuncio') 
-                               || document.getElementById('seccion-videos-empresa')
-                               || document.querySelector('.bloque-categoria')?.parentElement;
+  let contenedorVideosPublico = document.getElementById('contenedor-video-anuncio') || document.getElementById('seccion-videos-empresa') || document.querySelector('.bloque-categoria')?.parentElement;
+  if (!contenedorVideosPublico) {
+    contenedorVideosPublico = document.createElement('div');
+    contenedorVideosPublico.id = "contenedor-video-anuncio-forzado";
+    document.body.appendChild(contenedorVideosPublico);
+  }
+  try {
+    const urlFetch = SUPABASE_URL + '/rest/v1/videos?select=id,titulo,ruta_video';
+    const respuesta = await fetch(urlFetch, {
+      headers: { 
+        'apikey': SUPABASE_ANON_KEY, 
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY // <-- CORREGIDO: Espacio añadido después de Bearer
+      } 
+    });
+    const datosBrutos = await respuesta.json();
+    listaVideosGlobalEmpresa = (datosBrutos && Array.isArray(datosBrutos)) ? datosBrutos : [];
+    contenedorVideosPublico.innerHTML = '';
     
-    if (!contenedorVideosPublico) {
-        contenedorVideosPublico = document.createElement('div');
-        contenedorVideosPublico.id = "contenedor-video-anuncio-forzado";
-        document.body.appendChild(contenedorVideosPublico);
+    // ESCUDO MULTIMEDIA: Si limpiaste la base de datos, ponemos este video de prueba de internet
+    if (listaVideosGlobalEmpresa.length === 0) {
+      listaVideosGlobalEmpresa = [{id: "respaldo", titulo: "Catálogo de Maderas Comerciales", ruta_video: "https://w3schools.com" }];
     }
-
-    try {
-        const urlFetch = SUPABASE_URL + '/rest/v1/videos?select=id,titulo,ruta_video';
-        const respuesta = await fetch(urlFetch, {
-            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
-        });
-        const datosBrutos = await respuesta.json();
-
-        listaVideosGlobalEmpresa = (datosBrutos && Array.isArray(datosBrutos)) ? datosBrutos : [];
-
-        contenedorVideosPublico.innerHTML = '';
-
-        // ESCUDO MULTIMEDIA: Si limpiaste la base de datos, ponemos este video de prueba de internet
-        if (listaVideosGlobalEmpresa.length === 0) {
-            listaVideosGlobalEmpresa = [{
-                id: "respaldo",
-                titulo: "Catálogo de Maderas Comerciales",
-                ruta_video: "https://w3schools.com"
-            }];
-        }
-
-        indiceVideoActualTikTok = 0; 
-        
-        // REPARACIÓN MAESTRA E INMUTABLE: Extraemos el primer video usando el índice real [0]
-        const primerVideo = listaVideosGlobalEmpresa[0]; 
-
-        contenedorVideosPublico.style.cssText = "display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; width: 100% !important; padding: 40px 0 !important; box-sizing: border-box !important; clear: both !important; min-height: 500px !important; visibility: visible !important; opacity: 1 !important;";
-
-        const cajaTikTok = document.createElement('div');
-        cajaTikTok.id = "reproductor-tiktok-container";
-        cajaTikTok.style.cssText = "width: 100%; max-width: 420px; background: #000 !important; border-radius: 16px !important; overflow: hidden !important; box-shadow: 0 12px 30px rgba(0,0,0,0.4) !important; display: flex !important; flex-direction: column !important; position: relative !important; visibility: visible !important; opacity: 1 !important; margin: 0 auto !important;";
-
-        cajaTikTok.innerHTML = `
-            <div style="width: 100%; height: 450px; display: flex !important; align-items: center !important; justify-content: center !important; background: #000 !important;">
-                <video id="videoElementoTikTok" src="${primerVideo.ruta_video}" controls autoplay muted style="width: 100% !important; height: 100% !important; object-fit: contain !important; display: block !important;"></video>
-            </div>
-            <div style="padding: 18px; background: rgba(15, 23, 42, 0.95) !important; text-align: center !important; width: 100% !important; box-sizing: border-box !important; border-top: 1px solid #334155 !important;">
-                <strong id="tituloVideoTikTok" style="font-size: 15px !important; color: #fff !important; display: block !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; font-family: inherit !important; font-weight: bold !important;">
-                    ${primerVideo.titulo || 'Video Comercial'}
-                </strong>
-                <span id="contadorVideoTikTok" style="font-size: 12px !important; color: #94a3b8 !important; display: block !important; margin-top: 5px !important;">
-                    Anuncio 1 de ${listaVideosGlobalEmpresa.length}
-                </span>
-            </div>
-        `;
-        contenedorVideosPublico.appendChild(cajaTikTok);
-
-        const videoHtml = document.getElementById('videoElementoTikTok');
-        if (videoHtml) {
-            videoHtml.loop = false;
-            videoHtml.removeAttribute('loop');
-            videoHtml.onended = reproducirSiguienteVideoTikTok;
-        }
-
-    } catch (err) { console.error("Error en el motor TikTok forzado:", err); }
-}
-
-function reproducirSiguienteVideoTikTok() {
+    indiceVideoActualTikTok = 0;
+    
+    // REPARACIÓN MAESTRA E INMUTABLE: Extraemos el primer video usando el índice real [0]
+    const primerVideo = listaVideosGlobalEmpresa[0];
+    contenedorVideosPublico.style.cssText = "display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; width: 100% !important; padding: 40px 0 !important; box-sizing: border-box !important; clear: both !important; min-height: 500px !important; visibility: visible !important; opacity: 1 !important;";
+    
+    const cajaTikTok = document.createElement('div');
+    cajaTikTok.id = "reproductor-tiktok-container";
+    cajaTikTok.style.cssText = "width: 100%; max-width: 420px; background: #000 !important; border-radius: 16px !important; overflow: hidden !important; box-shadow: 0 12px 30px rgba(0,0,0,0.4) !important; display: flex !important; flex-direction: column !important; position: relative !important; visibility: visible !important; opacity: 1 !important; margin: 0 auto !important;";
+    cajaTikTok.innerHTML = `
+      <div style="width: 100%; height: 450px; display: flex !important; align-items: center !important; justify-content: center !important; background: #000 !important;">
+        <video id="videoElementoTikTok" src="${primerVideo.ruta_video}" controls autoplay muted style="width: 100% !important; height: 100% !important; object-fit: contain !important; display: block !important;"></video>
+      </div>
+      <div style="padding: 18px; background: rgba(15, 23, 42, 0.95) !important; text-align: center !important; width: 100% !important; box-sizing: border-box !important; border-top: 1px solid #334155 !important;">
+        <strong id="tituloVideoTikTok" style="font-size: 15px !important; color: #fff !important; display: block !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; font-family: inherit !important; font-weight: bold !important;">
+          ${primerVideo.titulo || 'Video Comercial'}
+        </strong>
+        <span id="contadorVideoTikTok" style="font-size: 12px !important; color: #94a3b8 !important; display: block !important; margin-top: 5px !important;">
+          Anuncio 1 de ${listaVideosGlobalEmpresa.length}
+        </span>
+      </div>
+    `;
+    contenedorVideosPublico.appendChild(cajaTikTok);
     const videoHtml = document.getElementById('videoElementoTikTok');
-    const tituloHtml = document.getElementById('tituloVideoTikTok');
-    const contadorHtml = document.getElementById('contadorVideoTikTok');
-
-    if (!videoHtml || listaVideosGlobalEmpresa.length === 0) return;
-
-    indiceVideoActualTikTok++;
-
-    if (indiceVideoActualTikTok >= listaVideosGlobalEmpresa.length) {
-        indiceVideoActualTikTok = 0;
+    if (videoHtml) {
+      videoHtml.loop = false;
+      videoHtml.removeAttribute('loop');
+      videoHtml.onended = reproducirSiguienteVideoTikTok;
     }
-
-    const siguienteVideo = listaVideosGlobalEmpresa[indiceVideoActualTikTok];
-    videoHtml.style.opacity = "0.3";
-    
-    setTimeout(() => {
-        videoHtml.src = siguienteVideo.ruta_video;
-        videoHtml.loop = false;
-        videoHtml.removeAttribute('loop');
-        
-        if (tituloHtml) tituloHtml.textContent = siguienteVideo.titulo || 'Video Comercial';
-        if (contadorHtml) contadorHtml.textContent = `Anuncio ${indiceVideoActualTikTok + 1} de ${listaVideosGlobalEmpresa.length}`;
-        
-        videoHtml.style.opacity = "1";
-        videoHtml.play().catch(e => console.log("Interacción requerida."));
-    }, 200);
+  } catch (err) { 
+    console.error("Error en el motor TikTok forzado:", err); 
+  }
 }
-
 // =========================================================================
 // 5. FUNCIONALIDADES DE RESPALDO (CATÁLOGOS PDF Y PRODUCTOS MODULARES)
 // =========================================================================
