@@ -219,64 +219,103 @@ window.descargarYActualizarFotosEnWeb = descargarYActualizarFotosEnWeb;
 // ==========================================
 // 6. DESCARGA Y SINCRONIZACIÓN DEL VIDEO EN VIVO (CORREGIDO ÍNDICE INDIVIDUAL)
 // ==========================================
-async function sincronizarVideoAnuncioWeb() {
-    const contenedor = document.getElementById('videoContainer');
-    const barra = document.getElementById('barraAbrir');
-    const elementoVideo = document.getElementById('miVideo');
-    const btnCerrar = document.getElementById('btnCerrar');
-    const btnAbrir = document.getElementById('btnAbrir');
+// Variables de control global para la cartelera secuencial estilo TikTok
+let listaVideosGlobalEmpresa = [];
+let indiceVideoActualTikTok = 0;
 
-    if (!contenedor || !elementoVideo) return;
+// =========================================================================
+// MOTOR COMERCIAL TIKTOK: REPRODUCCIÓN SECUENCIAL EN BUCLE INFINITO
+// =========================================================================
+async function sincronizarVideoAnuncioWeb() {
+    const contenedorVideosPublico = document.getElementById('contenedor-video-anuncio') || document.getElementById('seccion-videos-empresa');
+    if (!contenedorVideosPublico) return;
 
     try {
-        const respuestaVideos = await fetch(SUPABASE_URL + '/rest/v1/videos?select=ruta_video,fecha_subida', {
+        // Descargamos la lista limpia de videos desde la base de datos de internet
+        const urlFetch = SUPABASE_URL + '/rest/v1/videos?select=id,titulo,ruta_video';
+        const respuesta = await fetch(urlFetch, {
             headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
         });
-        const listaVideos = await respuestaVideos.json();
+        listaVideosGlobalEmpresa = await respuesta.json();
 
-        let videoMasReciente = null;
+        // Reseteamos el contenedor visual público
+        contenedorVideosPublico.innerHTML = '';
 
-        if (listaVideos && Array.isArray(listaVideos) && listaVideos.length > 0) {
-            // Ordenamos de más nuevo a más viejo cronológicamente en JavaScript puro
-            const ordenados = listaVideos.sort(function(a, b) {
-                return new Date(b.fecha_subida) - new Date(a.fecha_subida);
-            });
-            // CORREGIDO EXÁCTAMENTE: Captura el primer elemento individual [0] para inyectar al reproductor
-            videoMasReciente = ordenados[0]; 
-        }
+        if (listaVideosGlobalEmpresa && Array.isArray(listaVideosGlobalEmpresa) && listaVideosGlobalEmpresa.length > 0) {
+            indiceVideoActualTikTok = 0; // Iniciamos siempre en el video 1
 
-        if (videoMasReciente && videoMasReciente.ruta_video) {
-            elementoVideo.src = videoMasReciente.ruta_video; // Inyecta la URL de Supabase Storage
-            contenedor.style.display = 'block'; // Enciende el reproductor flotante en la pantalla
-            elementoVideo.play().catch(err => console.log("Auto-play esperando interacción del usuario."));
+            // Ajustamos el contenedor para centrar el reproductor gigante tipo celular/pantalla comercial
+            contenedorVideosPublico.style.cssText = "display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; width: 100% !important; padding: 20px 0 !important; box-sizing: border-box !important;";
 
-            if (btnCerrar) {
-                btnCerrar.onclick = function() {
-                    contenedor.style.display = 'none';
-                    if (barra) barra.style.display = 'block';
-                    elementoVideo.pause();
-                };
+            // Fabricamos la estructura del reproductor TikTok
+            const cajaTikTok = document.createElement('div');
+            cajaTikTok.id = "reproductor-tiktok-container";
+            cajaTikTok.style.cssText = "width: 100%; max-width: 450px; background: #000; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: flex; flex-direction: column; position: relative; transition: all 0.3s ease;";
+
+            // Inyectamos el nodo de video con autoplay controlado, silenciado por defecto para que Edge permita el arranque nativo
+            cajaTikTok.innerHTML = `
+                <div style="width: 100%; height: 500px; display: flex; align-items: center; justify-content: center; background: #000;">
+                    <video id="videoElementoTikTok" src="${listaVideosGlobalEmpresa[0].ruta_video}" controls autoplay muted style="width: 100%; height: 100%; object-fit: contain;"></video>
+                </div>
+                <div style="padding: 15px; background: rgba(0, 0, 0, 0.85); text-align: center; width: 100%; box-sizing: border-box;">
+                    <strong id="tituloVideoTikTok" style="font-size: 15px; color: #fff; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: inherit; font-weight: bold;">
+                        ${listaVideosGlobalEmpresa[0].titulo || 'Video Comercial'}
+                    </strong>
+                    <span id="contadorVideoTikTok" style="font-size: 12px; color: #a8a29e; display: block; margin-top: 4px;">
+                        Anuncio 1 de ${listaVideosGlobalEmpresa.length}
+                    </span>
+                </div>
+            `;
+
+            contenedorVideosPublico.appendChild(cajaTikTok);
+
+            // AMARRE DEL DETECTOR DE FINALIZACIÓN (EVENTO ENDED)
+            const videoHtml = document.getElementById('videoElementoTikTok');
+            if (videoHtml) {
+                videoHtml.addEventListener('ended', reproducirSiguienteVideoTikTok);
             }
 
-            if (btnAbrir) {
-                btnAbrir.onclick = function() {
-                    contenedor.style.display = 'block';
-                    if (barra) barra.style.display = 'none';
-                    elementoVideo.play().catch(err => console.error(err));
-                };
-            }
-            console.log("¡El video comercial más reciente se sincronizó con éxito!");
         } else {
-            contenedor.style.display = 'none';
-            if (barra) barra.style.display = 'none';
-            elementoVideo.src = "";
+            contenedorVideosPublico.innerHTML = `<div style="color: #94a3b8; font-size: 14px; font-style: italic; text-align: center; padding: 30px 0; border: 2px dashed #cbd5e1; border-radius: 8px; width: 100%;">⚪ Próximamente nuevos videos comerciales.</div>`;
         }
     } catch (err) {
-        console.error("Hubo un problema inesperado con el reproductor:", err);
+        console.error("Error en el motor de reproducción TikTok:", err);
     }
 }
 
+// FUNCIÓN AUTOMÁTICA DE TRÁNSITO SECUENCIAL
+function reproducirSiguienteVideoTikTok() {
+    const videoHtml = document.getElementById('videoElementoTikTok');
+    const tituloHtml = document.getElementById('tituloVideoTikTok');
+    const contadorHtml = document.getElementById('contadorVideoTikTok');
 
+    if (!videoHtml || listaVideosGlobalEmpresa.length === 0) return;
+
+    // Avanzamos al siguiente índice de la lista de internet
+    indiceVideoActualTikTok++;
+
+    // REGLA DE RETORNO AL VIDEO 1: Si el índice supera la cantidad de videos, vuelve a cero
+    if (indiceVideoActualTikTok >= listaVideosGlobalEmpresa.length) {
+        indiceVideoActualTikTok = 0;
+    }
+
+    const siguienteVideo = listaVideosGlobalEmpresa[indiceVideoActualTikTok];
+
+    // Transición visual suave cambiando las propiedades en caliente
+    videoHtml.style.opacity = "0.3";
+    
+    setTimeout(() => {
+        videoHtml.src = siguienteVideo.ruta_video;
+        if (tituloHtml) tituloHtml.textContent = siguienteVideo.titulo || 'Video Comercial';
+        if (contadorHtml) contadorHtml.textContent = `Anuncio ${indiceVideoActualTikTok + 1} de ${listaVideosGlobalEmpresa.length}`;
+        
+        videoHtml.style.opacity = "1";
+        videoHtml.play().catch(e => console.log("Permiso de autoplay requerido por interacción del usuario."));
+    }, 200);
+}
+// Vinculación al árbol global de carga
+window.sincronizarVideoAnuncioWeb = sincronizarVideoAnuncioWeb;
+window.reproducirSiguienteVideoTikTok = reproducirSiguienteVideoTikTok;
 // =========================================================================
 // 7. DESCARGA Y RENDERIZADO DE PRODUCTOS MODULARES EN VIVO (SIMETRÍA NATIVA FIJA)
 // =========================================================================
