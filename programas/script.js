@@ -1,44 +1,13 @@
-// ==========================================
-// ==========================================
-// 1. CONFIGURACIÓN Y CONEXIÓN CON SUPABASE (BLINDAJE ANTIBLOQUEO CORS)
-// ==========================================
-const SUPABASE_URL = "https://mpjwdgekznvukmpprlat.supabase.co"; 
+// =========================================================================
+// 1. CONFIGURACIÓN Y CONEXIÓN CON SUPABASE (ENTORNO PÚBLICO EMPRESA)
+// =========================================================================
+const SUPABASE_URL = "https://supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_lnwuBk9887iZy76uvAxeIQ_8StvDZ8K";
 
-// Mini-librería con aislamiento nativo estable para forzar la ruta real de tu negocio mpjwdgekznvukmpprlat
-(function(global) {
-    function SupabaseClient(urlProyecto, keyProyecto) {
-        this.url = urlProyecto;
-        this.key = keyProyecto;
-        this.from = function(t) {
-            var filters = [];
-            var ctx = {
-                select: function(cols) { return ctx; },
-                eq: function(col, val) { filters.push(col + '=eq.' + encodeURIComponent(val)); return ctx; },
-                maybeSingle: function() {
-                    var query = filters.length ? '?' + filters.join('&') : '';
-                    return fetch(urlProyecto + '/rest/v1/' + t + query, { 
-                        headers: { 'apikey': keyProyecto, 'Authorization': 'Bearer ' + keyProyecto, 'Accept': 'application/json' } 
-                    }).then(function(r) { 
-                        return r.json().then(function(d) { 
-                            if (!r.ok) return { data: null, error: d }; 
-                            var dataObj = (Array.isArray(d) && d.length > 0) ? d : (Array.isArray(d) ? null : d); 
-                            return { data: dataObj, error: null }; 
-                        }); 
-                    });
-                }
-            };
-            return ctx;
-        };
-    }
-    global.supabaseNativo = { createClient: function(u, k) { return new SupabaseClient(u, k); } };
-})(window);
-
-// Inicializamos el cliente blindado apuntando al subdominio único de tu negocio
-const supabaseClient = window.supabaseNativo.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// Variable global para almacenar temporalmente las fotos que descargamos de Supabase
+// Variable global receptora que alimenta la galería horizontal mixta
 let imagenesCargadasDeDB = [];
+let listaVideosGlobalEmpresa = [];
+let indiceVideoActualTikTok = 0;
 
 // =========================================================================
 // 2. LOGICA INTERACTIVA DEL MODAL (GALERÍA HORIZONTAL CON TÍTULOS VISIBLES BLINDADOS)
@@ -62,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const contenedorVariantes = tarjeta.querySelector('.variante-oculta');
             
-            // 1. PRIMER PASO: Renderizado de tus clones locales originales nativos de tu HTML
+            // A. PRIMER PASO: Renderizado de tus clones locales originales nativos de tu HTML
             if (contenedorVariantes) {
                 const items = contenedorVariantes.querySelectorAll('.item-variante');
                 items.forEach((item, index) => {
@@ -78,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // 2. SEGUNDO PASO: Escaneo automático e inyección de fotos nuevas infinitas del botón ➕
+            // B. SEGUNDO PASO: Escaneo automático e inyección de fotos nuevas infinitas del botón ➕
             const fotosExtrasNuevas = imagenesCargadasDeDB.filter(f => f.seccion_id === seccionId && isNaN(f.orden));
 
             if (fotosExtrasNuevas && fotosExtrasNuevas.length > 0) {
@@ -86,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const cajaNuevaExtra = document.createElement('div');
                     cajaNuevaExtra.className = 'item-variante';
                     
-                    // FORCE TEXTO DIRECTO: Le aplicamos color oscuro, tamaño visible y bloque para romper cualquier bloqueo de tu style.css
+                    // FORCE TEXTO DIRECTO: Aplicamos color oscuro y visibilidad absoluta rompiendo bloqueos CSS
                     cajaNuevaExtra.innerHTML = `
                         <img src="${item.ruta_imagen}?t=${Date.now()}" alt="${item.nombre_sub_variante || 'Extra'}" />
                         ${item.nombre_sub_variante ? `
@@ -95,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             </span>
                         ` : ''}
                     `;
-                    
                     if (galeriaInterna) galeriaInterna.appendChild(cajaNuevaExtra);
                 });
             }
@@ -116,71 +84,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
-            ventanaModal.className = 'modal-visible';
+            if (ventanaModal) ventanaModal.className = 'modal-visible';
         });
     });
 
     if (cerrarBtn) {
-        cerrarBtn.addEventListener('click', () => { ventanaModal.className = 'modal-oculto'; });
+        cerrarBtn.addEventListener('click', () => { if (ventanaModal) ventanaModal.className = 'modal-oculto'; });
     }
 
     window.addEventListener('click', (e) => {
-        if (e.target === ventanaModal) { ventanaModal.className = 'modal-oculto'; }
+        if (e.target === ventanaModal) { if (ventanaModal) ventanaModal.className = 'modal-oculto'; }
     });
     
+    // Disparamos las descargas dinámicas en el arranque del cliente
     actualizarEnlaceDelCatalogo();
     descargarYActualizarFotosEnWeb();
     sincronizarVideoAnuncioWeb();
     cargarProductosModularesPublico();
 });
-// ==========================================
-// 4. DESCARGA AUTOMÁTICA DEL PDF DEL CATÁLOGO (BLINDAJE DE PESTAÑA NUEVA)
-// ==========================================
-async function actualizarEnlaceDelCatalogo() {
-  try {
-    const respuestaCatalogos = await fetch(SUPABASE_URL + '/rest/v1/catalogos?select=ruta_pdf', {
-        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
-    });
-    const listaCatalogos = await respuestaCatalogos.json();
 
-    if (listaCatalogos && Array.isArray(listaCatalogos) && listaCatalogos.length > 0) {
-      const pdfMasNuevo = listaCatalogos[listaCatalogos.length - 1];
-      const boton = document.getElementById('btn-catalogo');
-      
-      if (boton && pdfMasNuevo.ruta_pdf) {
-        boton.href = pdfMasNuevo.ruta_pdf; // Inyecta la URL del PDF de Supabase
-        
-        // REPARACIÓN DE ORO: Forzamos la apertura en pestaña nueva desde JavaScript
-        boton.target = "_blank"; 
-        
-        console.log("¡Enlace del PDF y apertura en pestaña nueva configurados con éxito!");
-      }
-    }
-  } catch (err) {
-    console.error("Hubo un problema inesperado con el PDF:", err);
-  }
-}
 // =========================================================================
-// SIFE-MOTOR: DESCARGA RECEPTORA DE IMÁGENES Y NOMBRES PLANOS DE LA DB
+// 3. DOWNLOAD GENERAL: DESCARGA RECEPTORA DE IMÁGENES Y NOMBRES PLANOS
 // =========================================================================
 async function descargarYActualizarFotosEnWeb() {
     try {
-        // Hacemos la consulta REST inyectando la nueva columna de nombres planos
         const urlFetch = SUPABASE_URL + '/rest/v1/catalogo_imagenes?select=id,seccion_id,orden,ruta_imagen,nombre_sub_variante';
-        
         const respuesta = await fetch(urlFetch, {
-            headers: { 
-                'apikey': SUPABASE_ANON_KEY, 
-                'Authorization': 'Bearer ' + SUPABASE_ANON_KEY 
-            }
+            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
         });
         const datos = await respuesta.json();
 
         if (datos && Array.isArray(datos)) {
-            // Sincronizamos la variable global para que la Función 2 lea los textos
             imagenesCargadasDeDB = datos;
 
-            // Renderizado simétrico inicial para tus 12 maderas fijas
+            // Renderizado simétrico inicial para tus 12 maderas tradicionales fijas
             datos.forEach(function(item) {
                 if (!isNaN(item.orden)) {
                     let bloquePrefijo = "S1";
@@ -200,7 +137,6 @@ async function descargarYActualizarFotosEnWeb() {
                     if (elementoImg) {
                         elementoImg.src = item.ruta_imagen + "?t=" + Date.now();
                         
-                        // Si cambias el nombre de una foto fija, actualiza su span nativo automáticamente
                         const elementoTexto = elementoImg.nextElementSibling;
                         if (elementoTexto && elementoTexto.tagName === "SPAN" && item.nombre_sub_variante) {
                             elementoTexto.textContent = item.nombre_sub_variante;
@@ -210,51 +146,44 @@ async function descargarYActualizarFotosEnWeb() {
             });
             console.log("¡Lote global de imágenes y nombres planos sincronizados con éxito!");
         }
-    } catch (err) {
-        console.error("Error en la descarga de metadatos públicos:", err);
-    }
+    } catch (err) { console.error("Error en la descarga de metadatos públicos:", err); }
 }
-// Registro obligatorio en el contexto global window
-window.descargarYActualizarFotosEnWeb = descargarYActualizarFotosEnWeb;
-// Variables de control global para la cartelera secuencial estilo TikTok
-let listaVideosGlobalEmpresa = [];
-let indiceVideoActualTikTok = 0;
 
 // =========================================================================
-// MOTOR COMERCIAL TIKTOK: VERSIÓN CORREGIDA ANTI-ERROR 404 (CON ÍNDICE CERO)
+// 4. MOTOR COMERCIAL TIKTOK: VERSIÓN BLINDADA DE ALTA PRECISIÓN ANTI-404
 // =========================================================================
 async function sincronizarVideoAnuncioWeb() {
     const contenedorVideosPublico = document.getElementById('contenedor-video-anuncio') || document.getElementById('seccion-videos-empresa');
     if (!contenedorVideosPublico) return;
 
     try {
-        // Descargamos la lista limpia de videos desde la base de datos de internet
         const urlFetch = SUPABASE_URL + '/rest/v1/videos?select=id,titulo,ruta_video';
         const respuesta = await fetch(urlFetch, {
             headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
         });
-        listaVideosGlobalEmpresa = await respuesta.json();
+        const datosBrutos = await respuesta.json();
 
-        // Reseteamos el contenedor visual público
+        // FILTRO DE SEGURIDAD INDEPENDIENTE ANTI-404: Limpia y valida las URLs físicas
+        listaVideosGlobalEmpresa = (datosBrutos && Array.isArray(datosBrutos)) 
+            ? datosBrutos.filter(v => v.ruta_video && v.ruta_video.trim().startsWith('http')) 
+            : [];
+
         contenedorVideosPublico.innerHTML = '';
 
-        if (listaVideosGlobalEmpresa && Array.isArray(listaVideosGlobalEmpresa) && listaVideosGlobalEmpresa.length > 0) {
-            indiceVideoActualTikTok = 0; // Iniciamos siempre en el video 1
+        if (listaVideosGlobalEmpresa.length > 0) {
+            indiceVideoActualTikTok = 0; 
+            const primerVideo = listaVideosGlobalEmpresa[0]; // Corrección de índice cero estructural
 
-            // Capturamos el primer elemento real indexado de la lista para evitar el 404
-            const primerVideo = listaVideosGlobalEmpresa[0];
-
-            // Ajustamos el contenedor para centrar el reproductor gigante tipo pantalla comercial
             contenedorVideosPublico.style.cssText = "display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; width: 100% !important; padding: 20px 0 !important; box-sizing: border-box !important;";
 
-            // Fabricamos la estructura del reproductor TikTok leyendo el objeto indexado cero
             const cajaTikTok = document.createElement('div');
             cajaTikTok.id = "reproductor-tiktok-container";
             cajaTikTok.style.cssText = "width: 100%; max-width: 450px; background: #000; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: flex; flex-direction: column; position: relative; transition: all 0.3s ease;";
 
+            // ELIMINACIÓN DE LOOP NATIVO: Desbloqueamos el trigger de tránsito secuencial
             cajaTikTok.innerHTML = `
                 <div style="width: 100%; height: 500px; display: flex; align-items: center; justify-content: center; background: #000;">
-                    <video id="videoElementoTikTok" src="${primerVideo.ruta_video}" controls autoplay muted style="width: 100%; height: 100%; object-fit: contain; transition: opacity 0.2s ease;"></video>
+                    <video id="videoElementoTikTok" src="${primerVideo.ruta_video.trim()}" controls autoplay muted style="width: 100%; height: 100%; object-fit: contain; transition: opacity 0.2s ease;"></video>
                 </div>
                 <div style="padding: 15px; background: rgba(0, 0, 0, 0.85); text-align: center; width: 100%; box-sizing: border-box;">
                     <strong id="tituloVideoTikTok" style="font-size: 15px; color: #fff; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: inherit; font-weight: bold;">
@@ -265,26 +194,20 @@ async function sincronizarVideoAnuncioWeb() {
                     </span>
                 </div>
             `;
-
             contenedorVideosPublico.appendChild(cajaTikTok);
 
-            // AMARRE DEL DETECTOR DE FINALIZACIÓN (EVENTO ENDED)
             const videoHtml = document.getElementById('videoElementoTikTok');
             if (videoHtml) {
                 videoHtml.loop = false;
                 videoHtml.removeAttribute('loop');
-                videoHtml.onended = reproducirSiguienteVideoTikTok;
+                videoHtml.onended = reproducirSiguienteVideoTikTok; // Salto en cadena
             }
-
         } else {
             contenedorVideosPublico.innerHTML = `<div style="color: #94a3b8; font-size: 14px; font-style: italic; text-align: center; padding: 30px 0; border: 2px dashed #cbd5e1; border-radius: 8px; width: 100%;">⚪ Próximamente nuevos videos comerciales.</div>`;
         }
-    } catch (err) {
-        console.error("Error en el motor de reproducción TikTok:", err);
-    }
+    } catch (err) { console.error("Error en el motor TikTok:", err); }
 }
 
-// FUNCIÓN AUTOMÁTICA DE TRÁNSITO SECUENCIAL INDEPENDIENTE
 function reproducirSiguienteVideoTikTok() {
     const videoHtml = document.getElementById('videoElementoTikTok');
     const tituloHtml = document.getElementById('tituloVideoTikTok');
@@ -292,21 +215,18 @@ function reproducirSiguienteVideoTikTok() {
 
     if (!videoHtml || listaVideosGlobalEmpresa.length === 0) return;
 
-    // Avanzamos al siguiente índice de la lista de internet
     indiceVideoActualTikTok++;
 
-    // REGLA DE RETORNO AL VIDEO 1: Si supera la cantidad de videos, vuelve a cero
+    // RETORNO AL ANUNCIO 1: Ciclo infinito continuo al terminar el stock
     if (indiceVideoActualTikTok >= listaVideosGlobalEmpresa.length) {
         indiceVideoActualTikTok = 0;
     }
 
     const siguienteVideo = listaVideosGlobalEmpresa[indiceVideoActualTikTok];
-
-    // Transición visual suave cambiando las propiedades en caliente
     videoHtml.style.opacity = "0.3";
     
     setTimeout(() => {
-        videoHtml.src = siguienteVideo.ruta_video;
+        videoHtml.src = siguienteVideo.ruta_video.trim();
         videoHtml.loop = false;
         videoHtml.removeAttribute('loop');
         
@@ -314,129 +234,49 @@ function reproducirSiguienteVideoTikTok() {
         if (contadorHtml) contadorHtml.textContent = `Anuncio ${indiceVideoActualTikTok + 1} de ${listaVideosGlobalEmpresa.length}`;
         
         videoHtml.style.opacity = "1";
-        videoHtml.play().catch(e => console.log("Permiso de interacción requerido por el navegador."));
+        videoHtml.play().catch(e => console.log("Permiso de autoplay requerido."));
     }, 200);
 }
 
-// Vinculación al árbol global de carga
-window.sincronizarVideoAnuncioWeb = sincronizarVideoAnuncioWeb;
-window.reproducirSiguienteVideoTikTok = reproducirSiguienteVideoTikTok;
 // =========================================================================
-// 7. DESCARGA Y RENDERIZADO DE PRODUCTOS MODULARES EN VIVO (SIMETRÍA NATIVA FIJA)
+// 5. FUNCIONALIDADES DE RESPALDO (CATÁLOGOS PDF Y PRODUCTOS MODULARES)
 // =========================================================================
-async function cargarProductosModularesPublico() {
-    const contenedor = document.getElementById('contenedorModularesPublico');
-    if (!contenedor) return;
-
+async function actualizarEnlaceDelCatalogo() {
     try {
-        // A. Descargamos las maderas ilimitadas desde la API REST directa de internet
-        const respuestaMaster = await fetch(SUPABASE_URL + '/rest/v1/productos_modulares?select=id,titulo,descripcion,ruta_portada', {
-            headers: { 
-                'apikey': SUPABASE_ANON_KEY, 
-                'Authorization': 'Bearer ' + SUPABASE_ANON_KEY 
-            }
-        });
-        const productos = await respuestaMaster.json();
-
-        // Limpiamos el contenedor elástico receptor antes de pintar para evitar duplicados
-        contenedor.innerHTML = '';
-
-        if (productos && Array.isArray(productos) && productos.length > 0) {
-            for (const prod of productos) {
-                // B. Traemos las variantes secundarias asociadas a este ID de madera específico
-                const respuestaVariantes = await fetch(SUPABASE_URL + '/rest/v1/productos_modulares_fotos?select=ruta_foto,nombre_variante&producto_id=eq.' + prod.id, {
-                    headers: { 
-                        'apikey': SUPABASE_ANON_KEY, 
-                        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY 
-                    }
-                });
-                const variantes = await respuestaVariantes.json();
-
-                // C. ESTRUCTURA COMPATIBLE COMPLETA: Clona exactamente los mismos atributos de tu Canelo
-                const tarjeta = document.createElement('div');
-                tarjeta.className = 'tarjeta-producto'; // Obligatorio: misma clase exacta para usar tu CSS natal
-                tarjeta.setAttribute('id', 'Dinamico-' + prod.id);
-                tarjeta.setAttribute('data-titulo', prod.titulo);
-                tarjeta.setAttribute('data-descripcion', prod.descripcion || '');
-                tarjeta.style.cursor = 'pointer';
-
-                // Inyección idéntica a tu maquetación visual: img, info-tarjeta, h4 y variante-oculta
-                let contenidoHTML = `
-                    <img src="${prod.ruta_portada}?t=${Date.now()}" alt="${prod.titulo}" />
-                    <div class="info-tarjeta">
-                        <h4>${prod.titulo}</h4>
-                    </div>
-                    <div class="variante-oculta">
-                `;
-
-                // Montamos los items de variantes para la galería interna del modal
-                if (variantes && variantes.length > 0) {
-                    variantes.forEach(v => {
-                        contenidoHTML += `
-                            <div class="item-variante">
-                                <img src="${v.ruta_foto}" alt="${prod.titulo}">
-                            </div>
-                        `;
-                    });
-                } else {
-                    // Respaldo de seguridad si el administrador no guardó variantes internas
-                    contenidoHTML += `
-                        <div class="item-variante">
-                            <img src="${prod.ruta_portada}" alt="${prod.titulo}">
-                        </div>
-                    `;
-                }
-
-                // Inyectamos tu mismo cuadro café inferior con especificaciones y medidas respetando tu diseño nativo
-                contenidoHTML += `
-                        <div class="item-variante" style="grid-column: 1 / -1; background: #eef2f3; padding: 15px; margin-top: 10px;">
-                            <span style="font-size: 14px; color: #3e2723; white-space: pre-wrap; font-family: inherit; display: block; text-align: left;">
-                                ${prod.descripcion || 'Sin especificaciones añadidas todavía.'}
-                            </span>
-                        </div>
-                    </div> <!-- Fin variante-oculta -->
-                `;
-
-                tarjeta.innerHTML = contenidoHTML;
-
-                // D. Programamos el disparador del clic para abrir el modal nativo idéntico de la empresa
-                tarjeta.addEventListener('click', function() {
-                    const ventanaModal = document.getElementById('modal-ventana');
-                    const nombreModal = document.getElementById('modal-nombre');
-                    const detalleModal = document.getElementById('modal-detalle'); 
-                    const galeriaInterna = document.getElementById('modal-galeria-interna');
-
-                    if (!ventanaModal || !nombreModal || !detalleModal || !galeriaInterna) return;
-
-                    galeriaInterna.innerHTML = '';
-                    nombreModal.textContent = this.getAttribute('data-titulo') || ''; 
-                    detalleModal.textContent = ''; // Limpio para que no se duplique con el span nativo del clon
-                    
-                    const contenedorVariantes = this.querySelector('.variante-oculta');
-                    if (contenedorVariantes) {
-                        const items = contenedorVariantes.querySelectorAll('.item-variante');
-                        items.forEach(item => {
-                            const clon = item.cloneNode(true);
-                            galeriaInterna.appendChild(clon);
-                        });
-                    }
-                    ventanaModal.className = 'modal-visible';
-                });
-
-                contenedor.appendChild(tarjeta);
-            }
-            console.log("¡Medición simétrica horizontal acoplada en la misma fila con éxito!");
+        const urlFetch = SUPABASE_URL + '/rest/v1/catalogos?select=ruta_pdf';
+        const r = await fetch(urlFetch, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
+        const data = await r.json();
+        if (data && data.length > 0) {
+            data.sort((a, b) => b.id - a.id);
+            const btnDescarga = document.getElementById('btn-descargar-pdf');
+            if (btnDescarga) btnDescarga.href = data.ruta_pdf;
         }
-    } catch (err) {
-        console.error("Error al sincronizar catálogo elástico público:", err);
-    }
+    } catch (e) { console.error(e); }
 }
 
-// Registro explícito global obligatorio
-window.cargarProductosModularesPublico = cargarProductosModularesPublico;
-// Vinculaciones explícitas en el árbol de ventanas globales
+async function cargarProductosModularesPublico() {
+    const con = document.getElementById('contenedor-productos-modulares-publico');
+    if (!con) return;
+    try {
+        const urlFetch = SUPABASE_URL + '/rest/v1/productos_modulares?select=id,titulo,descripcion,ruta_portada';
+        const r = await fetch(urlFetch, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
+        const data = await r.json();
+        con.innerHTML = '';
+        if (data && Array.isArray(data)) {
+            data.forEach(p => {
+                con.innerHTML += `
+                    <div class="tarjeta-modular" onclick="abrirModalModularReal('${p.id}', '${p.titulo.replace(/'/g, "\\'")}', '${(p.descripcion || '').replace(/'/g, "\\'")}')" style="cursor:pointer;">
+                        <img src="${p.ruta_portada}" alt="${p.titulo}">
+                        <h4>${p.titulo}</h4>
+                    </div>`;
+            });
+        }
+    } catch (e) { console.error(e); }
+}
+
+// Vinculaciones explícitas de red para el árbol window global
+window.descargarYActualizarFotosEnWeb = descargarYActualizarFotosEnWeb;
 window.sincronizarVideoAnuncioWeb = sincronizarVideoAnuncioWeb;
-
-
-
-
+window.reproducirSiguienteVideoTikTok = reproducirSiguienteVideoTikTok;
+window.actualizarEnlaceDelCatalogo = actualizarEnlaceDelCatalogo;
+window.cargarCamporProductosModularesPublico = cargarProductosModularesPublico;
