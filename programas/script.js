@@ -150,7 +150,7 @@ async function descargarYActualizarFotosEnWeb() {
 }
 
 // =========================================================================
-// 4. MOTOR COMERCIAL TIKTOK: VERSIÓN BLINDADA DE ALTA PRECISIÓN ANTI-404
+// 4. MOTOR COMERCIAL TIKTOK: VERSIÓN CORREGIDA CON ÍNDICE [0] DEFINITIVA ANTI-404
 // =========================================================================
 async function sincronizarVideoAnuncioWeb() {
     const contenedorVideosPublico = document.getElementById('contenedor-video-anuncio') || document.getElementById('seccion-videos-empresa');
@@ -163,7 +163,7 @@ async function sincronizarVideoAnuncioWeb() {
         });
         const datosBrutos = await respuesta.json();
 
-        // FILTRO DE SEGURIDAD INDEPENDIENTE ANTI-404: Limpia y valida las URLs físicas
+        // FILTRO DE SEGURIDAD: Solo dejamos pasar videos que tengan una URL de internet válida
         listaVideosGlobalEmpresa = (datosBrutos && Array.isArray(datosBrutos)) 
             ? datosBrutos.filter(v => v.ruta_video && v.ruta_video.trim().startsWith('http')) 
             : [];
@@ -171,8 +171,10 @@ async function sincronizarVideoAnuncioWeb() {
         contenedorVideosPublico.innerHTML = '';
 
         if (listaVideosGlobalEmpresa.length > 0) {
-            indiceVideoActualTikTok = 0; 
-            const primerVideo = listaVideosGlobalEmpresa[0]; // Corrección de índice cero estructural
+            indiceVideoActualTikTok = 0; // Iniciamos siempre en el video 1
+            
+            // REPARACIÓN MAESTRA: Extraemos estrictamente el primer elemento real usando el índice [0]
+            const primerVideo = listaVideosGlobalEmpresa[0]; 
 
             contenedorVideosPublico.style.cssText = "display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; width: 100% !important; padding: 20px 0 !important; box-sizing: border-box !important;";
 
@@ -180,7 +182,6 @@ async function sincronizarVideoAnuncioWeb() {
             cajaTikTok.id = "reproductor-tiktok-container";
             cajaTikTok.style.cssText = "width: 100%; max-width: 450px; background: #000; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: flex; flex-direction: column; position: relative; transition: all 0.3s ease;";
 
-            // ELIMINACIÓN DE LOOP NATIVO: Desbloqueamos el trigger de tránsito secuencial
             cajaTikTok.innerHTML = `
                 <div style="width: 100%; height: 500px; display: flex; align-items: center; justify-content: center; background: #000;">
                     <video id="videoElementoTikTok" src="${primerVideo.ruta_video.trim()}" controls autoplay muted style="width: 100%; height: 100%; object-fit: contain; transition: opacity 0.2s ease;"></video>
@@ -200,7 +201,7 @@ async function sincronizarVideoAnuncioWeb() {
             if (videoHtml) {
                 videoHtml.loop = false;
                 videoHtml.removeAttribute('loop');
-                videoHtml.onended = reproducirSiguienteVideoTikTok; // Salto en cadena
+                videoHtml.onended = reproducirSiguienteVideoTikTok; // Enlaza el cambio secuencial
             }
         } else {
             contenedorVideosPublico.innerHTML = `<div style="color: #94a3b8; font-size: 14px; font-style: italic; text-align: center; padding: 30px 0; border: 2px dashed #cbd5e1; border-radius: 8px; width: 100%;">⚪ Próximamente nuevos videos comerciales.</div>`;
@@ -217,7 +218,7 @@ function reproducirSiguienteVideoTikTok() {
 
     indiceVideoActualTikTok++;
 
-    // RETORNO AL ANUNCIO 1: Ciclo infinito continuo al terminar el stock
+    // RETORNO AL VIDEO 1: Si se acaban, reinicia el ciclo desde la posición 0
     if (indiceVideoActualTikTok >= listaVideosGlobalEmpresa.length) {
         indiceVideoActualTikTok = 0;
     }
@@ -234,10 +235,9 @@ function reproducirSiguienteVideoTikTok() {
         if (contadorHtml) contadorHtml.textContent = `Anuncio ${indiceVideoActualTikTok + 1} de ${listaVideosGlobalEmpresa.length}`;
         
         videoHtml.style.opacity = "1";
-        videoHtml.play().catch(e => console.log("Permiso de autoplay requerido."));
+        videoHtml.play().catch(e => console.log("Permiso de autoplay requerido por el navegador."));
     }, 200);
 }
-
 // =========================================================================
 // 5. FUNCIONALIDADES DE RESPALDO (CATÁLOGOS PDF Y PRODUCTOS MODULARES)
 // =========================================================================
