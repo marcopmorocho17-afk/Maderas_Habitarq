@@ -250,27 +250,23 @@ async function sincronizarVideoAnuncioWeb() {
 
 
 // ==========================================
-// 7. DESCARGA Y RENDERIZADO DE PRODUCTOS MODULARES EN VIVO (MALLA HORIZONTAL Y FIJACIÓN 404)
+// 7. DESCARGA Y RENDERIZADO DE PRODUCTOS MODULARES EN VIVO (FORZADO HORIZONTAL HORIZONTAL)
 // ==========================================
 async function cargarProductosModularesPublico() {
     const contenedor = document.getElementById('contenedorModularesPublico');
     if (!contenedor) return;
 
     try {
-        // Ejecuta la consulta REST directa usando los tokens declarados arriba
         const respuestaMaster = await fetch(SUPABASE_URL + '/rest/v1/productos_modulares?select=id,titulo,descripcion,ruta_portada', {
             headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
         });
         const productos = await respuestaMaster.json();
 
-        // FORZADO DE MALLA HORIZONTAL DIRECTO DESDE JS (Pone los cuadros uno al lado del otro)
-        contenedor.style.setProperty('display', 'grid', 'important');
-        contenedor.style.setProperty('grid-template-columns', 'repeat(auto-fill, minmax(280px, 1fr))', 'important');
-        contenedor.style.setProperty('gap', '30px', 'important');
-        contenedor.style.setProperty('width', '100%', 'important');
-        contenedor.style.setProperty('clear', 'both', 'important');
-
+        // Limpiamos el contenedor elástico para evitar repeticiones visuales
         contenedor.innerHTML = '';
+
+        // FORZADO MÁXIMO AL CONTENEDOR PADRE: Asegura espacio suficiente y comportamiento de bloque contenedor libre
+        contenedor.style.cssText = "display: block !important; width: 100% !important; clear: both !important; margin-top: 30px !important; box-sizing: border-box !important;";
 
         if (productos && Array.isArray(productos) && productos.length > 0) {
             for (const prod of productos) {
@@ -286,7 +282,9 @@ async function cargarProductosModularesPublico() {
                 tarjeta.setAttribute('id', 'Dinamico-' + prod.id);
                 tarjeta.setAttribute('data-titulo', prod.titulo);
                 tarjeta.setAttribute('data-descripcion', prod.descripcion || '');
-                tarjeta.style.cursor = 'pointer';
+                
+                // LINEA DE ORO CORRECTIVA: Forzamos a cada tarjeta individual a comportarse como elemento en línea y flotar a la izquierda
+                tarjeta.style.cssText = "cursor: pointer !important; display: inline-block !important; float: left !important; margin: 15px !important; width: 280px !important; box-sizing: border-box !important; vertical-align: top !important;";
                 
                 let contenidoHTML = `
                     <img src="${prod.ruta_portada}?t=${Date.now()}" alt="${prod.titulo}" />
@@ -329,17 +327,18 @@ async function cargarProductosModularesPublico() {
                 tarjeta.addEventListener('click', function() {
                     const ventanaModal = document.getElementById('modal-ventana');
                     const nombreModal = document.getElementById('modal-nombre');
-                    const detalleModal = document.getElementById('modal-detalle'); // REPARADO 404: Apunta al nodo correcto de tu web
+                    const detalleModal = document.getElementById('modal-detalle'); 
+
+                    if (!ventanaModal || !nombreModal || !detalleModal) return;
+
                     const galeriaInterna = document.getElementById('modal-galeria-interna');
-
-                    if (!ventanaModal || !nombreModal || !detalleModal || !galeriaInterna) return;
-
-                    galeriaInterna.innerHTML = '';
+                    if (galeriaInterna) galeriaInterna.innerHTML = '';
+                    
                     nombreModal.textContent = this.getAttribute('data-titulo') || ''; 
-                    detalleModal.textContent = ''; // Limpio para que herede el span inferior nativo sin duplicarse
+                    detalleModal.textContent = ''; 
                     
                     const contenedorVariantes = this.querySelector('.variante-oculta');
-                    if (contenedorVariantes) {
+                    if (contenedorVariantes && galeriaInterna) {
                         const items = contenedorVariantes.querySelectorAll('.item-variante');
                         items.forEach(item => {
                             const clon = item.cloneNode(true);
@@ -351,7 +350,13 @@ async function cargarProductosModularesPublico() {
 
                 contenedor.appendChild(tarjeta);
             }
-            console.log("¡Malla horizontal y modal dinámico sincronizados sin errores 404!");
+            
+            // Elemento de cierre extra para limpiar las flotaciones del CSS nativo de tu web
+            const limpiadorFlotado = document.createElement('div');
+            limpiadorFlotado.style.cssText = "clear: both !important; display: block !important; height: 1px !important;";
+            contenedor.appendChild(limpiadorFlotado);
+            
+            console.log("¡Forzado horizontal en línea aplicado con éxito!");
         }
     } catch (err) {
         console.error("Error al sincronizar catálogo elástico público:", err);
@@ -360,6 +365,7 @@ async function cargarProductosModularesPublico() {
 
 // Sincronización explícita global
 window.cargarProductosModularesPublico = cargarProductosModularesPublico;
+
 
 // Vinculaciones explícitas en el árbol de ventanas globales
 window.sincronizarVideoAnuncioWeb = sincronizarVideoAnuncioWeb;
