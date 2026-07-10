@@ -221,7 +221,7 @@ let listaVideosGlobalEmpresa = [];
 let indiceVideoActualTikTok = 0;
 
 // =========================================================================
-// MOTOR COMERCIAL TIKTOK: VERSIÓN BLINDADA ANTI-ATASCOS (SIN LOOP NATIVO)
+// MOTOR COMERCIAL TIKTOK: VERSIÓN CORREGIDA ANTI-ERROR 404 (CON ÍNDICE CERO)
 // =========================================================================
 async function sincronizarVideoAnuncioWeb() {
     const contenedorVideosPublico = document.getElementById('contenedor-video-anuncio') || document.getElementById('seccion-videos-empresa');
@@ -241,22 +241,24 @@ async function sincronizarVideoAnuncioWeb() {
         if (listaVideosGlobalEmpresa && Array.isArray(listaVideosGlobalEmpresa) && listaVideosGlobalEmpresa.length > 0) {
             indiceVideoActualTikTok = 0; // Iniciamos siempre en el video 1
 
+            // Capturamos el primer elemento real indexado de la lista para evitar el 404
+            const primerVideo = listaVideosGlobalEmpresa[0];
+
             // Ajustamos el contenedor para centrar el reproductor gigante tipo pantalla comercial
             contenedorVideosPublico.style.cssText = "display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; width: 100% !important; padding: 20px 0 !important; box-sizing: border-box !important;";
 
-            // Fabricamos la estructura del reproductor TikTok
+            // Fabricamos la estructura del reproductor TikTok leyendo el objeto indexado cero
             const cajaTikTok = document.createElement('div');
             cajaTikTok.id = "reproductor-tiktok-container";
             cajaTikTok.style.cssText = "width: 100%; max-width: 450px; background: #000; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: flex; flex-direction: column; position: relative; transition: all 0.3s ease;";
 
-            // ELIMINACIÓN DE LOOP: Quitamos estrictamente el atributo loop para liberar el detector 'ended'
             cajaTikTok.innerHTML = `
                 <div style="width: 100%; height: 500px; display: flex; align-items: center; justify-content: center; background: #000;">
-                    <video id="videoElementoTikTok" src="${listaVideosGlobalEmpresa[0].ruta_video}" controls autoplay muted style="width: 100%; height: 100%; object-fit: contain; transition: opacity 0.2s ease;"></video>
+                    <video id="videoElementoTikTok" src="${primerVideo.ruta_video}" controls autoplay muted style="width: 100%; height: 100%; object-fit: contain; transition: opacity 0.2s ease;"></video>
                 </div>
                 <div style="padding: 15px; background: rgba(0, 0, 0, 0.85); text-align: center; width: 100%; box-sizing: border-box;">
                     <strong id="tituloVideoTikTok" style="font-size: 15px; color: #fff; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: inherit; font-weight: bold;">
-                        ${listaVideosGlobalEmpresa[0].titulo || 'Video Comercial'}
+                        ${primerVideo.titulo || 'Video Comercial'}
                     </strong>
                     <span id="contadorVideoTikTok" style="font-size: 12px; color: #a8a29e; display: block; margin-top: 4px;">
                         Anuncio 1 de ${listaVideosGlobalEmpresa.length}
@@ -266,14 +268,11 @@ async function sincronizarVideoAnuncioWeb() {
 
             contenedorVideosPublico.appendChild(cajaTikTok);
 
-            // AMARRE DEL DETECTOR DE FINALIZACIÓN (EVENTO ENDED LIBERADO)
+            // AMARRE DEL DETECTOR DE FINALIZACIÓN (EVENTO ENDED)
             const videoHtml = document.getElementById('videoElementoTikTok');
             if (videoHtml) {
-                // Forzamos al elemento a remover cualquier rastro de loop por si el navegador lo inyecta solo
                 videoHtml.loop = false;
                 videoHtml.removeAttribute('loop');
-                
-                // Conectamos el riel de tránsito secuencial
                 videoHtml.onended = reproducirSiguienteVideoTikTok;
             }
 
@@ -309,14 +308,12 @@ function reproducirSiguienteVideoTikTok() {
     setTimeout(() => {
         videoHtml.src = siguienteVideo.ruta_video;
         videoHtml.loop = false;
-        videoHtml.removeAttribute('loop'); // Doble protección anti-atascos
+        videoHtml.removeAttribute('loop');
         
         if (tituloHtml) tituloHtml.textContent = siguienteVideo.titulo || 'Video Comercial';
         if (contadorHtml) contadorHtml.textContent = `Anuncio ${indiceVideoActualTikTok + 1} de ${listaVideosGlobalEmpresa.length}`;
         
         videoHtml.style.opacity = "1";
-        
-        // Disparador de play asíncrono nativo
         videoHtml.play().catch(e => console.log("Permiso de interacción requerido por el navegador."));
     }, 200);
 }
