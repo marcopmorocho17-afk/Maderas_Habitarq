@@ -306,29 +306,33 @@ async function sincronizarVideoAnuncioWeb() {
 
 
 // ==========================================
-// 7. DESCARGA Y RENDERIZADO DE PRODUCTOS MODULARES EN VIVO (MEDICIÓN SIMÉTRICA REPARADA)
+// 7. DESCARGA Y RENDERIZADO DE PRODUCTOS MODULARES EN VIVO (FILA SIMÉTRICA REPARADA)
 // ==========================================
 async function cargarProductosModularesPublico() {
     const contenedor = document.getElementById('contenedorModularesPublico');
     if (!contenedor) return;
 
     try {
+        // A. Descargamos las maderas ilimitadas de Supabase
         const respuestaMaster = await fetch(SUPABASE_URL + '/rest/v1/productos_modulares?select=id,titulo,descripcion,ruta_portada', {
             headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
         });
         const productos = await respuestaMaster.json();
 
+        // REPARACIÓN MAESTRA: Forzamos al contenedor a ordenarlos de izquierda a derecha en cuadricula simétrica
+        contenedor.style.cssText = "display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; width: 100%; box-sizing: border-box; margin-top: 30px;";
+
         contenedor.innerHTML = '';
 
         if (productos && Array.isArray(productos) && productos.length > 0) {
             for (const prod of productos) {
-                // Traemos sus imágenes de galería asociadas
+                // B. Traemos sus imágenes de galería asociadas
                 const respuestaVariantes = await fetch(SUPABASE_URL + '/rest/v1/productos_modulares_fotos?select=ruta_foto,nombre_variante&producto_id=eq.' + prod.id, {
                     headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
                 });
                 const variantes = await respuestaVariantes.json();
 
-                // Creamos la tarjeta con la clase limpia exacta para que el CSS la mida igual
+                // C. CONSTRUCCIÓN CON CLONACIÓN HTML DE TU CANELO/SEIQUE
                 const tarjeta = document.createElement('div');
                 tarjeta.className = 'tarjeta-producto';
                 tarjeta.setAttribute('id', 'Dinamico-' + prod.id);
@@ -336,7 +340,7 @@ async function cargarProductosModularesPublico() {
                 tarjeta.setAttribute('data-descripcion', prod.descripcion || '');
                 tarjeta.style.cursor = 'pointer';
 
-                // CORRECCIÓN DE MEDIDA: Inyección limpia directa de imagen y título sin divs contenedores que rompan el alto
+                // Inyectamos exactamente tus mismas clases nativas: info-tarjeta, h4 y variante-oculta
                 let contenidoHTML = `
                     <img src="${prod.ruta_portada}" alt="${prod.titulo}" />
                     <div class="info-tarjeta">
@@ -362,7 +366,7 @@ async function cargarProductosModularesPublico() {
                     `;
                 }
 
-                // Cuadro café inferior con especificaciones dentro del modal
+                // Cuadro café inferior con especificaciones y medidas dentro del modal
                 contenidoHTML += `
                         <div class="item-variante" style="grid-column: 1 / -1; background: #eef2f3; padding: 15px; margin-top: 10px;">
                             <span style="font-size: 14px; color: #3e2723; white-space: pre-wrap; font-family: inherit; display: block; text-align: left;">
@@ -374,7 +378,7 @@ async function cargarProductosModularesPublico() {
 
                 tarjeta.innerHTML = contenidoHTML;
 
-                // Programamos el disparador del clic para tu ventana modal nativa
+                // D. Programamos el disparador del clic para tu ventana modal nativa
                 tarjeta.addEventListener('click', function() {
                     const ventanaModal = document.getElementById('modal-ventana');
                     const nombreModal = document.getElementById('modal-nombre');
@@ -402,16 +406,18 @@ async function cargarProductosModularesPublico() {
 
                 contenedor.appendChild(tarjeta);
             }
-            console.log("¡Medición corregida y adaptada al CSS nativo con éxito!");
+            console.log("¡Medición simétrica horizontal acoplada con éxito!");
         }
     } catch (err) {
         console.error("Error al sincronizar catálogo elástico público:", err);
     }
 }
 
-
 // Vinculación explícita global para el entorno nativo de la web
 window.cargarProductosModularesPublico = cargarProductosModularesPublico;
 // Vinculaciones explícitas en el árbol de ventanas globales
 window.sincronizarVideoAnuncioWeb = sincronizarVideoAnuncioWeb;
+
+
+
 
