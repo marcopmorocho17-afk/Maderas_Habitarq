@@ -40,9 +40,9 @@ const supabaseClient = window.supabaseNativo.createClient(SUPABASE_URL, SUPABASE
 // Variable global para almacenar temporalmente las fotos que descargamos de Supabase
 let imagenesCargadasDeDB = [];
 
-// =========================================================================
-// 2. LOGICA INTERACTIVA DEL MODAL (GALERÍA HORIZONTAL FLUIDA SIN LÍMITES)
-// =========================================================================
+// ==========================================
+// 2. LOGICA INTERACTIVA DE LA VENTANA MODAL (VERSION ORIGINAL NATAL SIN LIMITES)
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     const ventanaModal = document.getElementById('modal-ventana');
     const cerrarBtn = document.getElementById('modal-cerrar-btn');
@@ -54,60 +54,68 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tarjetasProductos.forEach(tarjeta => {
         tarjeta.addEventListener('click', () => {
-            // A. Limpieza absoluta antes de renderizar la galería
-            galeriaInterna.innerHTML = '';
+            // Limpieza absoluta antes de renderizar la galería original
+            if (galeriaInterna) galeriaInterna.innerHTML = '';
 
             const seccionId = tarjeta.getAttribute('id') || 'Seccion1';
             nombreModal.textContent = tarjeta.getAttribute('data-titulo') || '';
             detalleModal.textContent = tarjeta.getAttribute('data-descripcion') || '';
             
-            // B. TRUCO DE REJILLA FLUIDA HORIZONTAL: Fuerza el diseño en malla elástica uno al lado del otro
-            if (galeriaInterna) {
-                galeriaInterna.style.cssText = "display: grid !important; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important; gap: 20px !important; width: 100% !important; padding: 15px !important; box-sizing: border-box !important;";
-            }
-
-            // C. ESCANEO GLOBAL: Extrae absolutamente todas las fotos extras acumuladas de esta madera en Supabase
-            const fotosExtrasDB = imagenesCargadasDeDB.filter(f => f.seccion_id === seccionId);
+            const contenedorVariantes = tarjeta.querySelector('.variante-oculta');
             
-            if (fotosExtrasDB && fotosExtrasDB.length > 0) {
-                fotosExtrasDB.forEach(item => {
-                    const cajaItem = document.createElement('div');
-                    cajaItem.style.cssText = "border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px; background: #fff; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: space-between; box-sizing: border-box;";
+            if (contenedorVariantes) {
+                const items = contenedorVariantes.querySelectorAll('.item-variante');
+                items.forEach((item, index) => {
+                    const clon = item.cloneNode(true);
+                    const ordenPuesto = index + 1;
+                    const fotoModificada = imagenesCargadasDeDB.find(f => f.seccion_id === seccionId && f.orden === ordenPuesto);
                     
-                    // Inyección milimétrica sin límites: foto cuadrada elástica y el texto plano centrado abajo
-                    cajaItem.innerHTML = `
-                        <div style="width: 100%; height: 150px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 8px;">
-                            <img src="${item.ruta_imagen}?t=${Date.now()}" style="width: 100%; height: 100%; object-fit: cover;" />
-                        </div>
-                        ${item.nombre_sub_variante ? `
-                            <span style="display:block; font-size: 13px; color: #3e2723; margin-top: 8px; font-weight: bold; text-align: center; font-family: inherit;">
-                                ${item.nombre_sub_variante}
-                            </span>
-                        ` : ''}
-                    `;
-                    galeriaInterna.appendChild(cajaItem);
+                    if (fotoModificada) {
+                        const imgClonada = clon.querySelector('img');
+                        if (imgClonada) {
+                            imgClonada.src = fotoModificada.ruta_imagen;
+                        }
+                    }
+                    if (galeriaInterna) galeriaInterna.appendChild(clon);
                 });
             } else {
-                // D. RESPALDO NATAL: Si la base de datos de internet está vacía, clona el HTML estático original
-                const contenedorVariantes = tarjeta.querySelector('.variante-oculta');
-                if (contenedorVariantes) {
-                    const items = contenedorVariantes.querySelectorAll('.item-variante');
-                    items.forEach(item => { galeriaInterna.appendChild(item.cloneNode(true)); });
+                const imgPortada = tarjeta.querySelector('img');
+                if (imgPortada) {
+                    const estructuraSimple = document.createElement('div');
+                    estructuraSimple.className = 'item-variante';
+                    estructuraSimple.style.gridColumn = '1 / -1';
+                    
+                    const nuevaImg = document.createElement('img');
+                    nuevaImg.src = imgPortada.src;
+                    nuevaImg.style.height = '260px';
+                    
+                    estructuraSimple.appendChild(nuevaImg);
+                    if (galeriaInterna) galeriaInterna.appendChild(estructuraSimple);
                 }
             }
             ventanaModal.className = 'modal-visible';
         });
     });
 
-    if (cerrarBtn) cerrarBtn.addEventListener('click', () => { ventanaModal.className = 'modal-oculto'; });
-    window.addEventListener('click', (e) => { if (e.target === ventanaModal) ventanaModal.className = 'modal-oculto'; });
+    if (cerrarBtn) {
+        cerrarBtn.addEventListener('click', () => {
+            ventanaModal.className = 'modal-oculto';
+        });
+    }
 
-    // Disparadores en cadena de los componentes dinámicos de internet
+    window.addEventListener('click', (e) => {
+        if (e.target === ventanaModal) {
+            ventanaModal.className = 'modal-oculto';
+        }
+    });
+    
+    // Disparamos las descargas dinámicas automáticas en el orden correcto
     actualizarEnlaceDelCatalogo();
     descargarYActualizarFotosEnWeb();
     sincronizarVideoAnuncioWeb();
     cargarProductosModularesPublico();
 });
+
 // ==========================================
 // 4. DESCARGA AUTOMÁTICA DEL PDF DEL CATÁLOGO (BLINDAJE DE PESTAÑA NUEVA)
 // ==========================================
