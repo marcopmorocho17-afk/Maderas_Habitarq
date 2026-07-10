@@ -150,7 +150,7 @@ async function descargarYActualizarFotosEnWeb() {
 }
 
 // =========================================================================
-// 4. MOTOR COMERCIAL TIKTOK: AUTO-INYECCIÓN FORZADA DE SEGURIDAD (ANTI-VACÍOS)
+// 4. MOTOR COMERCIAL TIKTOK: VERSIÓN BRONCE DEFINITIVA (CON ÍNDICE CERO [0])
 // =========================================================================
 async function sincronizarVideoAnuncioWeb() {
     let contenedorVideosPublico = document.getElementById('contenedor-video-anuncio') 
@@ -174,6 +174,7 @@ async function sincronizarVideoAnuncioWeb() {
 
         contenedorVideosPublico.innerHTML = '';
 
+        // ESCUDO MULTIMEDIA: Si limpiaste la base de datos, ponemos este video de prueba de internet
         if (listaVideosGlobalEmpresa.length === 0) {
             listaVideosGlobalEmpresa = [{
                 id: "respaldo",
@@ -183,7 +184,9 @@ async function sincronizarVideoAnuncioWeb() {
         }
 
         indiceVideoActualTikTok = 0; 
-        const primerVideo = listaVideosGlobalEmpresa[0];
+        
+        // REPARACIÓN MAESTRA E INMUTABLE: Extraemos el primer video usando el índice real [0]
+        const primerVideo = listaVideosGlobalEmpresa[0]; 
 
         contenedorVideosPublico.style.cssText = "display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; width: 100% !important; padding: 40px 0 !important; box-sizing: border-box !important; clear: both !important; min-height: 500px !important; visibility: visible !important; opacity: 1 !important;";
 
@@ -256,7 +259,7 @@ async function actualizarEnlaceDelCatalogo() {
         if (data && data.length > 0) {
             data.sort((a, b) => b.id - a.id);
             const btnDescarga = document.getElementById('btn-descargar-pdf');
-            if (btnDescarga) btnDescarga.href = data[0].ruta_pdf;
+            if (btnDescarga) btnDescarga.href = data.ruta_pdf;
         }
     } catch (e) { console.error(e); }
 }
