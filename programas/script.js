@@ -4,6 +4,7 @@
 const SUPABASE_URL = "https://mpjwdgekznvukmpprlat.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_lnwuBk9887iZy76uvAxeIQ_8StvDZ8K";
 
+
 // Variable global receptora que alimenta la galería horizontal mixta
 let imagenesCargadasDeDB = [];
 let listaVideosGlobalEmpresa = [];
