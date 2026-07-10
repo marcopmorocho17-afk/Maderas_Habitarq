@@ -40,9 +40,9 @@ const supabaseClient = window.supabaseNativo.createClient(SUPABASE_URL, SUPABASE
 // Variable global para almacenar temporalmente las fotos que descargamos de Supabase
 let imagenesCargadasDeDB = [];
 
-// ==========================================
-// 2. LOGICA INTERACTIVA DE LA VENTANA MODAL (VERSION ORIGINAL NATAL SIN LIMITES)
-// ==========================================
+// =========================================================================
+// 2. LOGICA INTERACTIVA DEL MODAL (RENDERIZADO DINÁMICO DE CARACTERÍSTICAS)
+// =========================================================================
 document.addEventListener('DOMContentLoaded', () => {
     const ventanaModal = document.getElementById('modal-ventana');
     const cerrarBtn = document.getElementById('modal-cerrar-btn');
@@ -60,62 +60,48 @@ document.addEventListener('DOMContentLoaded', () => {
             nombreModal.textContent = tarjeta.getAttribute('data-titulo') || '';
             detalleModal.textContent = tarjeta.getAttribute('data-descripcion') || '';
             
-            const contenedorVariantes = tarjeta.querySelector('.variante-oculta');
+            // Filtramos todas las sub-variantes de internet que pertenezcan a esta madera (ej: Seccion12)
+            const subVariantesDB = imagenesCargadasDeDB.filter(f => f.seccion_id === seccionId);
             
-            if (contenedorVariantes) {
-                const items = contenedorVariantes.querySelectorAll('.item-variante');
-                items.forEach((item, index) => {
-                    const clon = item.cloneNode(true);
-                    const ordenPuesto = index + 1;
-                    const fotoModificada = imagenesCargadasDeDB.find(f => f.seccion_id === seccionId && f.orden === ordenPuesto);
+            if (subVariantesDB && subVariantesDB.length > 0) {
+                subVariantesDB.forEach(item => {
+                    const cajaItem = document.createElement('div');
+                    cajaItem.className = 'item-variante';
+                    cajaItem.style.cssText = "border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; background: #fff; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px;";
                     
-                    if (fotoModificada) {
-                        const imgClonada = clon.querySelector('img');
-                        if (imgClonada) {
-                            imgClonada.src = fotoModificada.ruta_imagen;
-                        }
-                    }
-                    galeriaInterna.appendChild(clon);
+                    // Inyectamos la foto con su título específico y cuadro de medidas café correspondiente
+                    cajaItem.innerHTML = `
+                        <img src="${item.ruta_imagen}?t=${Date.now()}" style="max-height: 200px; object-fit: cover; border-radius: 6px;" />
+                        ${item.nombre_sub_variante ? `<strong style="font-size:14px; color:#1e293b; display:block; text-align:center; font-family:inherit;">${item.nombre_sub_variante}</strong>` : ''}
+                        ${item.caracteristicas_tecnicas ? `
+                            <div style="background: #eef2f3; padding: 10px; border-radius: 4px; text-align: left; margin-top: 5px;">
+                                <span style="font-size: 13px; color: #3e2723; white-space: pre-wrap; font-family: inherit;">${item.caracteristicas_tecnicas}</span>
+                            </div>
+                        ` : ''}
+                    `;
+                    galeriaInterna.appendChild(cajaItem);
                 });
             } else {
-                const imgPortada = tarjeta.querySelector('img');
-                if (imgPortada) {
-                    const estructuraSimple = document.createElement('div');
-                    estructuraSimple.className = 'item-variante';
-                    estructuraSimple.style.gridColumn = '1 / -1';
-                    
-                    const nuevaImg = document.createElement('img');
-                    nuevaImg.src = imgPortada.src;
-                    nuevaImg.style.height = '260px';
-                    
-                    estructuraSimple.appendChild(nuevaImg);
-                    galeriaInterna.appendChild(estructuraSimple);
+                // Respaldo de clones HTML nativos originales por si no hay nada guardado en Supabase
+                const contenedorVariantes = tarjeta.querySelector('.variante-oculta');
+                if (contenedorVariantes) {
+                    const items = contenedorVariantes.querySelectorAll('.item-variante');
+                    items.forEach(item => { galeriaInterna.appendChild(item.cloneNode(true)); });
                 }
             }
             ventanaModal.className = 'modal-visible';
         });
     });
 
-    if (cerrarBtn) {
-        cerrarBtn.addEventListener('click', () => {
-            ventanaModal.className = 'modal-oculto';
-        });
-    }
+    if (cerrarBtn) cerrarBtn.addEventListener('click', () => { ventanaModal.className = 'modal-oculto'; });
+    window.addEventListener('click', (e) => { if (e.target === ventanaModal) ventanaModal.className = 'modal-oculto'; });
 
-    window.addEventListener('click', (e) => {
-        if (e.target === ventanaModal) {
-            ventanaModal.className = 'modal-oculto';
-        }
-    });
-    
-    // Disparamos las descargas dinámicas automáticas en el orden correcto
     actualizarEnlaceDelCatalogo();
     descargarYActualizarFotosEnWeb();
     sincronizarVideoAnuncioWeb();
-    
-    // CONEXIÓN MAESTRA: Construye la cuadrícula dinámica elástica e ilimitada en tu página principal
     cargarProductosModularesPublico();
 });
+
 // ==========================================
 // 4. DESCARGA AUTOMÁTICA DEL PDF DEL CATÁLOGO (BLINDAJE DE PESTAÑA NUEVA)
 // ==========================================
