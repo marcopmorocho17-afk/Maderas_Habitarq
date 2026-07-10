@@ -249,52 +249,55 @@ async function sincronizarVideoAnuncioWeb() {
 }
 
 
-// ==========================================
-// 7. DESCARGA Y RENDERIZADO DE PRODUCTOS MODULARES EN VIVO (FORZADO HORIZONTAL HORIZONTAL)
-// ==========================================
+// =========================================================================
+// 7. DESCARGA Y RENDERIZADO DE PRODUCTOS MODULARES EN VIVO (SIMETRÍA NATIVA FIJA)
+// =========================================================================
 async function cargarProductosModularesPublico() {
     const contenedor = document.getElementById('contenedorModularesPublico');
     if (!contenedor) return;
 
     try {
+        // A. Descargamos las maderas ilimitadas desde la API REST directa de internet
         const respuestaMaster = await fetch(SUPABASE_URL + '/rest/v1/productos_modulares?select=id,titulo,descripcion,ruta_portada', {
-            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+            headers: { 
+                'apikey': SUPABASE_ANON_KEY, 
+                'Authorization': 'Bearer ' + SUPABASE_ANON_KEY 
+            }
         });
         const productos = await respuestaMaster.json();
 
-        // Limpiamos el contenedor elástico para evitar repeticiones visuales
+        // Limpiamos el contenedor elástico receptor antes de pintar para evitar duplicados
         contenedor.innerHTML = '';
-
-        // FORZADO MÁXIMO AL CONTENEDOR PADRE: Asegura espacio suficiente y comportamiento de bloque contenedor libre
-        contenedor.style.cssText = "display: block !important; width: 100% !important; clear: both !important; margin-top: 30px !important; box-sizing: border-box !important;";
 
         if (productos && Array.isArray(productos) && productos.length > 0) {
             for (const prod of productos) {
-                // Descargamos las variantes secundarias de este producto específico mediante fetch directo
+                // B. Traemos las variantes secundarias asociadas a este ID de madera específico
                 const respuestaVariantes = await fetch(SUPABASE_URL + '/rest/v1/productos_modulares_fotos?select=ruta_foto,nombre_variante&producto_id=eq.' + prod.id, {
-                    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+                    headers: { 
+                        'apikey': SUPABASE_ANON_KEY, 
+                        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY 
+                    }
                 });
                 const variantes = await respuestaVariantes.json();
 
-                // Creamos la tarjeta elástica clonando la estructura exacta de tus maderas fijas nativas
+                // C. ESTRUCTURA COMPATIBLE COMPLETA: Clona exactamente los mismos atributos de tu Canelo
                 const tarjeta = document.createElement('div');
-                tarjeta.className = 'tarjeta-producto';
+                tarjeta.className = 'tarjeta-producto'; // Obligatorio: misma clase exacta para usar tu CSS natal
                 tarjeta.setAttribute('id', 'Dinamico-' + prod.id);
                 tarjeta.setAttribute('data-titulo', prod.titulo);
                 tarjeta.setAttribute('data-descripcion', prod.descripcion || '');
-                
-                // LINEA DE ORO CORRECTIVA: Forzamos a cada tarjeta individual a comportarse como elemento en línea y flotar a la izquierda
-                tarjeta.style.cssText = "cursor: pointer !important; display: inline-block !important; float: left !important; margin: 15px !important; width: 280px !important; box-sizing: border-box !important; vertical-align: top !important;";
-                
+                tarjeta.style.cursor = 'pointer';
+
+                // Inyección idéntica a tu maquetación visual: img, info-tarjeta, h4 y variante-oculta
                 let contenidoHTML = `
                     <img src="${prod.ruta_portada}?t=${Date.now()}" alt="${prod.titulo}" />
                     <div class="info-tarjeta">
                         <h4>${prod.titulo}</h4>
                     </div>
-                    <div class="variante-oculta" style="display:none;">
+                    <div class="variante-oculta">
                 `;
 
-                // Montamos las fotos secundarias en la galería interna tal como tus maderas fijas
+                // Montamos los items de variantes para la galería interna del modal
                 if (variantes && variantes.length > 0) {
                     variantes.forEach(v => {
                         contenidoHTML += `
@@ -304,6 +307,7 @@ async function cargarProductosModularesPublico() {
                         `;
                     });
                 } else {
+                    // Respaldo de seguridad si el administrador no guardó variantes internas
                     contenidoHTML += `
                         <div class="item-variante">
                             <img src="${prod.ruta_portada}" alt="${prod.titulo}">
@@ -311,7 +315,7 @@ async function cargarProductosModularesPublico() {
                     `;
                 }
 
-                // Inyectamos el cuadro inferior respetando tu diseño nativo
+                // Inyectamos tu mismo cuadro café inferior con especificaciones y medidas respetando tu diseño nativo
                 contenidoHTML += `
                         <div class="item-variante" style="grid-column: 1 / -1; background: #eef2f3; padding: 15px; margin-top: 10px;">
                             <span style="font-size: 14px; color: #3e2723; white-space: pre-wrap; font-family: inherit; display: block; text-align: left;">
@@ -323,22 +327,21 @@ async function cargarProductosModularesPublico() {
 
                 tarjeta.innerHTML = contenidoHTML;
 
-                // Programamos el clic para armar el modal dinámico e interactivo nativo
+                // D. Programamos el disparador del clic para abrir el modal nativo idéntico de la empresa
                 tarjeta.addEventListener('click', function() {
                     const ventanaModal = document.getElementById('modal-ventana');
                     const nombreModal = document.getElementById('modal-nombre');
                     const detalleModal = document.getElementById('modal-detalle'); 
-
-                    if (!ventanaModal || !nombreModal || !detalleModal) return;
-
                     const galeriaInterna = document.getElementById('modal-galeria-interna');
-                    if (galeriaInterna) galeriaInterna.innerHTML = '';
-                    
+
+                    if (!ventanaModal || !nombreModal || !detalleModal || !galeriaInterna) return;
+
+                    galeriaInterna.innerHTML = '';
                     nombreModal.textContent = this.getAttribute('data-titulo') || ''; 
-                    detalleModal.textContent = ''; 
+                    detalleModal.textContent = ''; // Limpio para que no se duplique con el span nativo del clon
                     
                     const contenedorVariantes = this.querySelector('.variante-oculta');
-                    if (contenedorVariantes && galeriaInterna) {
+                    if (contenedorVariantes) {
                         const items = contenedorVariantes.querySelectorAll('.item-variante');
                         items.forEach(item => {
                             const clon = item.cloneNode(true);
@@ -350,23 +353,15 @@ async function cargarProductosModularesPublico() {
 
                 contenedor.appendChild(tarjeta);
             }
-            
-            // Elemento de cierre extra para limpiar las flotaciones del CSS nativo de tu web
-            const limpiadorFlotado = document.createElement('div');
-            limpiadorFlotado.style.cssText = "clear: both !important; display: block !important; height: 1px !important;";
-            contenedor.appendChild(limpiadorFlotado);
-            
-            console.log("¡Forzado horizontal en línea aplicado con éxito!");
+            console.log("¡Medición simétrica horizontal acoplada en la misma fila con éxito!");
         }
     } catch (err) {
         console.error("Error al sincronizar catálogo elástico público:", err);
     }
 }
 
-// Sincronización explícita global
+// Registro explícito global obligatorio
 window.cargarProductosModularesPublico = cargarProductosModularesPublico;
-
-
 // Vinculaciones explícitas en el árbol de ventanas globales
 window.sincronizarVideoAnuncioWeb = sincronizarVideoAnuncioWeb;
 
