@@ -41,7 +41,7 @@ const supabaseClient = window.supabaseNativo.createClient(SUPABASE_URL, SUPABASE
 let imagenesCargadasDeDB = [];
 
 // =========================================================================
-// 2. LOGICA INTERACTIVA DEL MODAL (RENDERIZADO MIXTO SIN LÍMITES HORIZONTAL)
+// 2. LOGICA INTERACTIVA DEL MODAL (GALERÍA HORIZONTAL CON TÍTULOS VISIBLES BLINDADOS)
 // =========================================================================
 document.addEventListener('DOMContentLoaded', () => {
     const ventanaModal = document.getElementById('modal-ventana');
@@ -69,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const clon = item.cloneNode(true);
                     const ordenPuesto = index + 1;
                     
-                    // Buscamos si el administrador modificó la foto tradicional de este casillero
                     const fotoModificada = imagenesCargadasDeDB.find(f => f.seccion_id === seccionId && f.orden == ordenPuesto);
                     if (fotoModificada) {
                         const imgClonada = clon.querySelector('img');
@@ -80,26 +79,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 2. SEGUNDO PASO: Escaneo automático e inyección de fotos nuevas infinitas del botón ➕
-            // Filtramos las maderas de Supabase cuyo orden empiece con texto o sea un identificador extra
             const fotosExtrasNuevas = imagenesCargadasDeDB.filter(f => f.seccion_id === seccionId && isNaN(f.orden));
 
             if (fotosExtrasNuevas && fotosExtrasNuevas.length > 0) {
                 fotosExtrasNuevas.forEach(item => {
-                    // Creamos el nodo clonando tu misma estructura nativa exacta (clase item-variante)
                     const cajaNuevaExtra = document.createElement('div');
                     cajaNuevaExtra.className = 'item-variante';
                     
-                    // Inyectamos la foto con su marca anti-caché y el nombre plano de tu casilla del admin abajo
+                    // FORCE TEXTO DIRECTO: Le aplicamos color oscuro, tamaño visible y bloque para romper cualquier bloqueo de tu style.css
                     cajaNuevaExtra.innerHTML = `
                         <img src="${item.ruta_imagen}?t=${Date.now()}" alt="${item.nombre_sub_variante || 'Extra'}" />
-                        ${item.nombre_sub_variante ? `<span>${item.nombre_sub_variante}</span>` : ''}
+                        ${item.nombre_sub_variante ? `
+                            <span style="display: block !important; visibility: visible !important; opacity: 1 !important; font-size: 14px !important; color: #1e293b !important; margin-top: 10px !important; font-weight: bold !important; text-align: center !important; font-family: inherit !important; width: 100% !important; clear: both !important;">
+                                ${item.nombre_sub_variante}
+                            </span>
+                        ` : ''}
                     `;
                     
                     if (galeriaInterna) galeriaInterna.appendChild(cajaNuevaExtra);
                 });
             }
 
-            // Respaldo de seguridad simple si la tarjeta no tuviera variantes internas
             if (!contenedorVariantes && (!fotosExtrasNuevas || fotosExtrasNuevas.length === 0)) {
                 const imgPortada = tarjeta.querySelector('img');
                 if (imgPortada) {
